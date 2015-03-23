@@ -32,7 +32,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
     public boolean mPlusClientIsConnecting = false;
 
     // This is the helper object that connects to Google Play Services.
-    private PlusClient mPlusClient;
+    protected PlusClient mPlusClient;
 
     // The saved result from {@link #onConnectionFailed(ConnectionResult)}.  If a connection
     // attempt has been made, this is non-null.
@@ -123,6 +123,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
             mPlusClient.disconnect();
         }
     }
+
 
     /**
      * Sign out the user (so they can switch to another account).

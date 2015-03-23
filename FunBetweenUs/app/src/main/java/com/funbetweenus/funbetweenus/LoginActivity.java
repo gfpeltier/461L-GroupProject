@@ -7,6 +7,7 @@ import android.annotation.TargetApi;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.ContentResolver;
 import android.content.CursorLoader;
+import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
@@ -15,7 +16,9 @@ import android.os.Build.VERSION;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -29,7 +32,16 @@ import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,6 +137,12 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             // Use AccountManager (API 8+)
             new SetupEmailAutoCompleteTask().execute(null, null);
         }
+    }
+
+
+    public void launchMainActivity(){
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(intent);
     }
 
 
@@ -227,6 +245,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         }
     }
 
+
     @Override
     protected void onPlusClientSignIn() {
         //Set up sign out and disconnect buttons.
@@ -244,6 +263,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 revokeAccess();
             }
         });
+        new CheckExistingUserTask().execute();
+        launchMainActivity();
     }
 
     @Override
@@ -326,6 +347,208 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         int ADDRESS = 0;
         int IS_PRIMARY = 1;
     }
+
+
+    class CheckExistingUserTask extends AsyncTask<Void, Void, String>{
+        TelephonyManager telephonyManager;
+        String deviceId;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // before making http calls
+            telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+            deviceId = telephonyManager.getDeviceId();
+
+        }
+
+        @Override
+        protected String doInBackground(Void... arg0) {
+            /*
+             * Will make http call here This call will download required data
+             * before launching the app
+             * example:
+             * 1. Downloading and storing in SQLite
+             * 2. Downloading images
+             * 3. Fetching and parsing the xml / json
+             * 4. Sending device information to server
+             * 5. etc.,
+             */
+            URL url;
+            HttpURLConnection conn = null;
+            BufferedReader read = null;
+            String strUrl = "http://" + getString(R.string.serverIPAddress) + "/php/checkDevice.php?deviceId=" + deviceId;
+            InputStream output = null;
+            StringBuilder builder = new StringBuilder();
+            String charset = "UTF-8";
+            try{
+                url = new URL(strUrl);
+                Log.v("Query", url.toString());
+                conn = (HttpURLConnection)url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setReadTimeout(15*1000);
+                conn.connect();
+                //conn.setRequestProperty("Accept-Charset", charset);
+                //byte[] out = new byte[1024];
+                //output = conn.getInputStream();
+                read = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String ln = null;
+                while((ln = read.readLine()) != null){
+                    builder.append(ln);
+                }
+                Log.i("Message",conn.getResponseMessage());
+                Log.i("Code", ""+conn.getResponseCode());
+                return builder.toString();
+                //int amt = output.read();
+                //Log.v("NUMBYTESREAD", ""+amt);
+                //byte[] xmlOut = new byte[100000];
+                //output.read(xmlOut);
+                //String oString = new String(xmlOut, "UTF-8");
+                //Log.v("XML",oString);
+                //output.close();
+                //return oString;
+            }catch (Exception e){
+                e.printStackTrace();
+                Log.e("ERROR", ""+e.getMessage());
+                Log.e("ERROR", "" + e.toString());
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            Log.i("CheckDBResult", result);
+            // After completing http call
+            // will close this activity and lauch main activity
+            JSONObject rootOfResult;
+            String code = "";
+            try{
+                rootOfResult = new JSONObject(result);
+                code = (String) rootOfResult.get("code");
+                Log.i("ResultCode", code);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
+            if(code.equals("success")){
+                return;
+            }else{
+                new CreateUserEntry().execute(deviceId);
+            }
+        }
+    }
+
+
+    class CreateUserEntry extends AsyncTask<String, Void, String>{
+
+        String deviceId;
+        String uEmail = null;
+        Person user = null;
+
+        @Override
+        protected void onPreExecute(){
+            while(!mPlusClient.isConnected()){
+                try {
+                    if(!isPlusClientConnecting()){
+                        mPlusClient.connect();
+                    }
+                    Thread.sleep(2000);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+            if(mPlusClient != null && mPlusClient.isConnected()){
+                user = mPlusClient.getCurrentPerson();
+                uEmail = mPlusClient.getAccountName();
+            }
+        }
+
+        @Override
+        protected String doInBackground(String... arg0){
+            deviceId = arg0[0];
+            String uId = null;
+            String uName = null;
+
+            if(user != null && user.hasId()){
+                uId = user.getId();
+            }
+            if(user != null && user.hasName()){
+                uName = user.getName().getGivenName();
+            }
+            URL url;
+            HttpURLConnection conn = null;
+            BufferedReader read = null;
+            String strUrl = "http://" + getString(R.string.serverIPAddress) + "/php/addUser.php?deviceId=" + deviceId + "&userEmail=" + uEmail + "&userName=" + uName +"&userId=" + uId;
+            InputStream output = null;
+            StringBuilder builder = new StringBuilder();
+            String charset = "UTF-8";
+            try{
+                url = new URL(strUrl);
+                Log.v("Query", url.toString());
+                conn = (HttpURLConnection)url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setReadTimeout(15*1000);
+                conn.connect();
+                //conn.setRequestProperty("Accept-Charset", charset);
+                //byte[] out = new byte[1024];
+                //output = conn.getInputStream();
+                read = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String ln = null;
+                while((ln = read.readLine()) != null){
+                    builder.append(ln);
+                }
+                Log.i("Message",conn.getResponseMessage());
+                Log.i("Code", ""+conn.getResponseCode());
+                return builder.toString();
+                //int amt = output.read();
+                //Log.v("NUMBYTESREAD", ""+amt);
+                //byte[] xmlOut = new byte[100000];
+                //output.read(xmlOut);
+                //String oString = new String(xmlOut, "UTF-8");
+                //Log.v("XML",oString);
+                //output.close();
+                //return oString;
+            }catch (Exception e){
+                e.printStackTrace();
+                Log.e("ERROR", ""+e.getMessage());
+                Log.e("ERROR", "" + e.toString());
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result){
+            super.onPostExecute(result);
+            Log.i("CheckDBAddResult", result);
+            JSONObject rootOfResult = null;
+            String code = "";
+            try{
+                rootOfResult = new JSONObject(result);
+                code = (String) rootOfResult.get("code");
+                Log.i("AddResultCode", code);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
+            if(code.equals("success")){
+                try {
+                    Log.i("UserAddSuccess", (String) rootOfResult.get("result"));
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }else{
+                try{
+                    Log.i("UserAddFailed", (String) rootOfResult.get("result"));
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+    }
+
 
     /**
      * Use an AsyncTask to fetch the user's email addresses on a background thread, and update
