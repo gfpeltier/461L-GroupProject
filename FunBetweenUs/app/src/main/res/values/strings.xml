@@ -5,4 +5,5 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="serverIPAddress">104.236.195.188</string>
+    <string name="google_maps_key">AIzaSyDxPBUKB3zEQkgie_xjtOvB54c2KIzF30s</string>
 </resources>

@@ -8,6 +8,9 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.funbetweenus.funbetweenus.utils.OnTaskCompleted;
+
 import org.json.*;
 
 import java.io.BufferedReader;
@@ -18,7 +21,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 
-public class TitleActivity extends ActionBarActivity {
+public class TitleActivity extends ActionBarActivity implements OnTaskCompleted {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +33,38 @@ public class TitleActivity extends ActionBarActivity {
          * Showing splashscreen while making network calls to download necessary
          * data before launching the app Will use AsyncTask to make http call
          */
-        new PrefetchData().execute();
+        new PrefetchData(this).execute();
+    }
+
+    @Override
+    public void onTaskCompleted(JSONObject obj) {
+        String code = null;
+        JSONObject userObject = null;
+
+        try{
+            code = (String) obj.get("code");
+            userObject = obj.getJSONObject("object");
+            Log.i("ResultCode", code);
+            Thread.sleep(2000);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        if(code.equals("success")){                           //Needed to move this block out of background thread
+            User currentUser = null;
+            assert userObject != null;
+            try {
+                currentUser = new User(userObject.getString("user_name"), userObject.getString("device_id"), userObject.getString("user_email"), userObject.getString("user_id"), Integer.parseInt(userObject.getString("id")));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.i("CurrentUserName", currentUser.getName());
+            Intent existingUser = new Intent(TitleActivity.this, MainActivity.class);
+            existingUser.putExtra("currentUser", currentUser);
+            startActivity(existingUser);
+        }else{
+            Intent newUser = new Intent(TitleActivity.this, LoginActivity.class);
+            startActivity(newUser);
+        }
     }
 
 
@@ -61,6 +95,12 @@ public class TitleActivity extends ActionBarActivity {
      * Async Task to make http call
      */
     private class PrefetchData extends AsyncTask<Void, Void, String> {
+
+        private TitleActivity listener;
+
+        public PrefetchData(TitleActivity listener){
+            this.listener = listener;
+        }
 
 
         TelephonyManager telephonyManager;
@@ -134,23 +174,45 @@ public class TitleActivity extends ActionBarActivity {
             Log.i("CheckDBResult", result);
             // After completing http call
             // will close this activity and lauch main activity
-            JSONObject rootOfResult;
-            String code = "";
+            JSONObject rootOfResult = null;
+            JSONObject userObject = null;
+            String code = null;
             try{
                 rootOfResult = new JSONObject(result);
                 code = (String) rootOfResult.get("code");
+                userObject = rootOfResult.getJSONObject("object");
                 Log.i("ResultCode", code);
             }catch(Exception e){
                 e.printStackTrace();
             }
-
-            if(code.equals("success")){
-                Intent existingUser = new Intent(TitleActivity.this, MainActivity.class);      //need to determine what activity to feed to
+            listener.onTaskCompleted(rootOfResult);
+            finish();
+            /*if(code.equals("success")){                           //Needed to move this block out of background thread
+                try{
+                    Thread.sleep(2000);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                User currentUser = null;
+                assert userObject != null;
+                try {
+                    currentUser = new User(userObject.getString("user_name"), userObject.getString("device_id"), userObject.getString("user_email"), userObject.getString("user_id"), Integer.parseInt(userObject.getString("id")));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Log.i("CurrentUserName", currentUser.getName());
+                Intent existingUser = new Intent(TitleActivity.this, MainActivity.class);
+                existingUser.putExtra("currentUser", currentUser);
                 startActivity(existingUser);
             }else{
+                try{
+                    Thread.sleep(2000);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
                 Intent newUser = new Intent(TitleActivity.this, LoginActivity.class);
                 startActivity(newUser);
-            }
+            }*/
 
 
 

@@ -1,28 +1,52 @@
 package com.funbetweenus.funbetweenus;
 
+import android.content.Context;
+import android.location.Location;
+import android.location.LocationManager;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
+import android.widget.TextView;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
+
+    private User user;
+    protected GoogleMap mMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
-                    .commit();
+        MapFragment mapFragment = (MapFragment) getFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+        String greet = "Hello, ";
+        try {
+            user = getIntent().getExtras().getParcelable("currentUser");
+            Log.i("CURRENT USER NAME", user.getName());
+            greet += user.getName();
+            //setTitle(greet);
+        }catch (Exception e){
+            e.printStackTrace();
         }
+
     }
 
 
@@ -48,19 +72,14 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
 
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
-        }
+    @Override
+    public void onMapReady(GoogleMap map) {
+        mMap = map;
+        LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        LatLng userLoc = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.setMyLocationEnabled(true);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLoc, 13));
     }
 }

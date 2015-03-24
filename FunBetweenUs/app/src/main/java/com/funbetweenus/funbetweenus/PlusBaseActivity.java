@@ -3,6 +3,7 @@ package com.funbetweenus.funbetweenus;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
+import android.provider.Contacts;
 import android.support.v7.app.ActionBarActivity;
 
 import android.util.Log;
@@ -10,15 +11,21 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.plus.People;
+import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.PlusClient;
+import com.google.android.gms.plus.model.people.Person;
 
 
 /**
  * A base class to wrap communication with the Google Play Services PlusClient.
  */
 public abstract class PlusBaseActivity extends ActionBarActivity
-        implements GooglePlayServicesClient.ConnectionCallbacks,
-        GooglePlayServicesClient.OnConnectionFailedListener {
+        implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        ResultCallback<People.LoadPeopleResult>{
 
     private static final String TAG = PlusBaseActivity.class.getSimpleName();
 
@@ -32,12 +39,19 @@ public abstract class PlusBaseActivity extends ActionBarActivity
     public boolean mPlusClientIsConnecting = false;
 
     // This is the helper object that connects to Google Play Services.
-    protected PlusClient mPlusClient;
+    protected GoogleApiClient mPlusClient;
+
+    protected Person baseUser = null;
 
     // The saved result from {@link #onConnectionFailed(ConnectionResult)}.  If a connection
     // attempt has been made, this is non-null.
     // If this IS null, then the connect method is still running.
     private ConnectionResult mConnectionResult;
+
+    /* A flag indicating that a PendingIntent is in progress and prevents
+   * us from starting further intents.
+   */
+    private boolean mIntentInProgress;
 
 
     /**
@@ -74,9 +88,15 @@ public abstract class PlusBaseActivity extends ActionBarActivity
 
         // Initialize the PlusClient connection.
         // Scopes indicate the information about the user your application will be able to access.
-      mPlusClient =
+      /*mPlusClient =
                 new PlusClient.Builder(this, this, this).setScopes(Scopes.PLUS_LOGIN,
-                        Scopes.PLUS_ME).build();           // Unable to resolve Builder
+                        Scopes.PLUS_ME).build();           // Unable to resolve Builder*/
+        mPlusClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Plus.API)
+                .addScope(Plus.SCOPE_PLUS_LOGIN)
+                .build();
     }
 
     /**
@@ -116,7 +136,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
 
     /**
      * Disconnect the {@link PlusClient} only if it is connected (otherwise, it can throw an error.)
-     * This will call back to {@link #onDisconnected()}.
+     * This will call back to .
      */
     private void initiatePlusClientDisconnect() {
         if (mPlusClient.isConnected()) {
@@ -134,7 +154,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
         if (mPlusClient.isConnected()) {
             // Clear the default account in order to allow the user to potentially choose a
             // different account from the account chooser.
-            mPlusClient.clearDefaultAccount();
+            mPlusClient.clearDefaultAccountAndReconnect();
 
             // Disconnect from Google Play Services, then reconnect in order to restart the
             // process from scratch.
@@ -153,17 +173,17 @@ public abstract class PlusBaseActivity extends ActionBarActivity
 
         if (mPlusClient.isConnected()) {
             // Clear the default account as in the Sign Out.
-            mPlusClient.clearDefaultAccount();
+            mPlusClient.clearDefaultAccountAndReconnect();
 
             // Revoke access to this entire application. This will call back to
             // onAccessRevoked when it is complete, as it needs to reach the Google
             // authentication servers to revoke all tokens.
-            mPlusClient.revokeAccessAndDisconnect(new PlusClient.OnAccessRevokedListener() {
+            /*mPlusClient.revokeAccessAndDisconnect(new PlusClient.OnAccessRevokedListener() {
                 public void onAccessRevoked(ConnectionResult result) {
                     updateConnectButtonState();
                     onPlusClientRevokeAccess();
                 }
-            });
+            });*/
         }
 
     }
@@ -242,16 +262,28 @@ public abstract class PlusBaseActivity extends ActionBarActivity
         updateConnectButtonState();
         setProgressBarVisible(false);
         onPlusClientSignIn();
+        if (Plus.PeopleApi.getCurrentPerson(mPlusClient) != null) {
+            baseUser = Plus.PeopleApi.getCurrentPerson(mPlusClient);
+        }
+        Plus.PeopleApi.loadVisible(mPlusClient, null)
+                .setResultCallback(this);
     }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        mPlusClient.connect();
+    }
+
+
 
     /**
      * Successfully disconnected (called by PlusClient)
      */
-    @Override
+    /*@Override                         // PlusClient method
     public void onDisconnected() {
         updateConnectButtonState();
         onPlusClientSignOut();
-    }
+    }*/
 
     /**
      * Connection failed for some reason (called by PlusClient)
@@ -264,20 +296,27 @@ public abstract class PlusBaseActivity extends ActionBarActivity
     public void onConnectionFailed(ConnectionResult result) {
         updateConnectButtonState();
 
-        // Most of the time, the connection will fail with a user resolvable result. We can store
-        // that in our mConnectionResult property ready to be used when the user clicks the
-        // sign-in button.
-        if (result.hasResolution()) {
-            mConnectionResult = result;
-            if (mAutoResolveOnFail) {
-                // This is a local helper function that starts the resolution of the problem,
-                // which may be showing the user an account chooser or similar.
-                startResolution();
+        if (!mIntentInProgress && result.hasResolution()) {
+            try {
+                mIntentInProgress = true;
+                startIntentSenderForResult(result.getResolution().getIntentSender(),
+                        OUR_REQUEST_CODE, null, 0, 0, 0);
+            } catch (IntentSender.SendIntentException e) {
+                // The intent was canceled before it was sent.  Return to the default
+                // state and attempt to connect to get an updated ConnectionResult.
+                mIntentInProgress = false;
+                mPlusClient.connect();
             }
         }
     }
 
-    public PlusClient getPlusClient() {
+
+    @Override
+    public void onResult(People.LoadPeopleResult peopleData){
+
+    }
+
+    public GoogleApiClient getPlusClient() {
         return mPlusClient;
     }
 

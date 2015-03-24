@@ -29,12 +29,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.funbetweenus.funbetweenus.utils.OnTaskCompleted;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -54,7 +56,7 @@ import java.util.List;
  * https://developers.google.com/+/mobile/android/getting-started#step_1_enable_the_google_api
  * and follow the steps in "Step 1" to create an OAuth 2.0 client for your package.
  */
-public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<Cursor> {
+public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<Cursor>, OnTaskCompleted {
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -338,6 +340,11 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
     }
 
+    @Override
+    public void onTaskCompleted(JSONObject obj) {
+
+    }
+
     private interface ProfileQuery {
         String[] PROJECTION = {
                 ContactsContract.CommonDataKinds.Email.ADDRESS,
@@ -422,9 +429,11 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             // After completing http call
             // will close this activity and lauch main activity
             JSONObject rootOfResult;
+            JSONObject userObject = null;
             String code = "";
             try{
                 rootOfResult = new JSONObject(result);
+                userObject = rootOfResult.getJSONObject("object");
                 code = (String) rootOfResult.get("code");
                 Log.i("ResultCode", code);
             }catch(Exception e){
@@ -432,7 +441,15 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             }
 
             if(code.equals("success")){
-                return;
+                User currentUser = null;
+                assert userObject != null;
+                try {
+                    currentUser = new User(userObject.getString("user_name"), userObject.getString("device_id"), userObject.getString("user_email"), userObject.getString("user_id"), Integer.parseInt(userObject.getString("id")));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Intent main = new Intent(LoginActivity.this, MainActivity.class).putExtra("currentUser", currentUser);
+                startActivity(main);
             }else{
                 new CreateUserEntry().execute(deviceId);
             }
@@ -459,8 +476,13 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 }
             }
             if(mPlusClient != null && mPlusClient.isConnected()){
-                user = mPlusClient.getCurrentPerson();
-                uEmail = mPlusClient.getAccountName();
+                //TODO: Need to fix this with Necessary code for GoogleApiClient
+                if(baseUser != null){
+                    user = baseUser;
+                    uEmail = Plus.AccountApi.getAccountName(mPlusClient);
+                }
+                //user = mPlusClient.;
+                //uEmail = mPlusClient.getAccountName();
             }
         }
 
@@ -522,9 +544,11 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             super.onPostExecute(result);
             Log.i("CheckDBAddResult", result);
             JSONObject rootOfResult = null;
+            JSONObject userObject = null;
             String code = "";
             try{
                 rootOfResult = new JSONObject(result);
+                userObject = rootOfResult.getJSONObject("result");
                 code = (String) rootOfResult.get("code");
                 Log.i("AddResultCode", code);
             }catch(Exception e){
@@ -537,6 +561,16 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 }catch(Exception e){
                     e.printStackTrace();
                 }
+                User currentUser = null;
+                assert userObject != null;
+                try {
+                    currentUser = new User(userObject.getString("user_name"), userObject.getString("device_id"), userObject.getString("user_email"), userObject.getString("user_id"), Integer.parseInt(userObject.getString("id")));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Log.i("CurrentUserName", currentUser.getName());
+                Intent main = new Intent(LoginActivity.this, MainActivity.class).putExtra("currentUser", currentUser);
+                startActivity(main);
             }else{
                 try{
                     Log.i("UserAddFailed", (String) rootOfResult.get("result"));
