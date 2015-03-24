@@ -8,6 +8,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
 
 import com.funbetweenus.funbetweenus.utils.OnTaskCompleted;
 
@@ -26,6 +27,9 @@ public class TitleActivity extends ActionBarActivity implements OnTaskCompleted 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        supportRequestWindowFeature(Window.FEATURE_ACTION_BAR);
+        getSupportActionBar().hide();
+
         setContentView(R.layout.activity_title);
 
 

@@ -15,6 +15,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Build;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -36,6 +38,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         MapFragment mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        initializeSpinners();
 
         String greet = "Hello, ";
         try {
@@ -49,6 +52,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+
+    public void initializeSpinners(){
+        Spinner spinner = (Spinner) findViewById(R.id.alone_or_friend_spinner);
+            // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.alone_or_friend_array, android.R.layout.simple_spinner_item);
+            // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+        spinner = (Spinner) findViewById(R.id.what_to_do_spinner);
+        adapter = ArrayAdapter.createFromResource(this,
+                R.array.what_to_do_array, android.R.layout.simple_spinner_item);
+        spinner.setAdapter(adapter);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

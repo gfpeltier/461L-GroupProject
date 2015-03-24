@@ -6,4 +6,19 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="serverIPAddress">104.236.195.188</string>
     <string name="google_maps_key">AIzaSyDxPBUKB3zEQkgie_xjtOvB54c2KIzF30s</string>
+    <string name="geo_search_hint">Where are you going?</string>
+    <string name="geo_search_button_text">Go</string>
+    <string name="radius_slider_label">Search Radius:</string>
+    <string-array name="alone_or_friend_array">
+        <item>Just Me!</item>
+        <item>Meet a Friend!</item>
+    </string-array>
+    <string-array name="what_to_do_array">
+        <item>Restaurants</item>
+        <item>Bars</item>
+        <item>Cafes</item>
+        <item>Wellness</item>
+        <item>Gems</item>
+        <item>Out N About</item>
+    </string-array>
 </resources>

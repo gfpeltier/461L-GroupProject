@@ -614,6 +614,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         }
     }
 
+
     private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
         //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         ArrayAdapter<String> adapter =
@@ -622,6 +623,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
         mEmailView.setAdapter(adapter);
     }
+
+
 
     /**
      * Represents an asynchronous login/registration task used to authenticate
@@ -672,6 +675,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 mPasswordView.requestFocus();
             }
         }
+
+
 
         @Override
         protected void onCancelled() {
