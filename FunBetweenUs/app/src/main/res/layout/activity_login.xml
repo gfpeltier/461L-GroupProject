@@ -44,7 +44,10 @@
 
             </LinearLayout>
 
-            <LinearLayout android:id="@+id/email_login_form" android:layout_width="match_parent"
+
+            <!-- Temporarily limit to Google+ Login only -->
+
+            <!-- <LinearLayout android:id="@+id/email_login_form" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:orientation="vertical">
 
                 <AutoCompleteTextView android:id="@+id/email" android:layout_width="match_parent"
@@ -64,7 +67,7 @@
                     android:layout_marginTop="16dp" android:text="@string/action_sign_in"
                     android:textStyle="bold" />
 
-            </LinearLayout>
+            </LinearLayout> -->
         </LinearLayout>
     </ScrollView>
 

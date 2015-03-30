@@ -67,6 +67,7 @@ public class TitleActivity extends ActionBarActivity implements OnTaskCompleted 
             startActivity(existingUser);
         }else{
             Intent newUser = new Intent(TitleActivity.this, LoginActivity.class);
+            newUser.putExtra("fromMain", false);
             startActivity(newUser);
         }
     }

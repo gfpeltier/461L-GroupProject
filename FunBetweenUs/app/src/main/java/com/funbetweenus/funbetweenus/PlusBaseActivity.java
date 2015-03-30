@@ -36,6 +36,9 @@ public abstract class PlusBaseActivity extends ActionBarActivity
     // A flag to stop multiple dialogues appearing for the user
     private boolean mAutoResolveOnFail;
 
+    // Flag to determine if returning from MainActivity
+    private boolean mReturnStatus = false;
+
     // A flag to track when a connection is already in progress
     public boolean mPlusClientIsConnecting = false;
     protected boolean mExplicitSignOut = false;
@@ -102,6 +105,8 @@ public abstract class PlusBaseActivity extends ActionBarActivity
                 .addApi(Plus.API)
                 .addScope(Plus.SCOPE_PLUS_LOGIN)
                 .build();
+
+
     }
 
     /**
@@ -166,7 +171,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
             // process from scratch.
             initiatePlusClientDisconnect();
 
-            Log.v(TAG, "Sign out successful!");
+            Log.e(TAG, "Sign out successful!");
         }
 
         updateConnectButtonState();
@@ -192,6 +197,9 @@ public abstract class PlusBaseActivity extends ActionBarActivity
                     onPlusClientRevokeAccess();
                 }
             });*/
+            mGoogleApiClient.disconnect();
+            updateConnectButtonState();
+            onPlusClientRevokeAccess();
         }
 
     }
@@ -332,6 +340,15 @@ public abstract class PlusBaseActivity extends ActionBarActivity
 
     public GoogleApiClient getPlusClient() {
         return mGoogleApiClient;
+    }
+
+
+    public boolean getLoginFlag(){
+        return mReturnStatus;
+    }
+
+    public void setLoginFlag(boolean status){
+        mReturnStatus = status;
     }
 
 }

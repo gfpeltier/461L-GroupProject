@@ -71,6 +71,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             txt.setText(greet);
         }
 
+
         mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mDrawerOptions));
         mDrawerList.setOnItemClickListener((ListView.OnItemClickListener) new DrawerItemClickListener());
 
@@ -148,6 +149,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             case 0:                 // Sign Out
                 Log.e("NavTable", "Sign Out attempted");
                 Intent logoutIntent = new Intent(MainActivity.this, LoginActivity.class);
+                logoutIntent.putExtra("fromMain",true);
                 startActivity(logoutIntent);
                 break;
             case 1:                 // Settings

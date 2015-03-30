@@ -56,7 +56,7 @@ import java.util.List;
  * https://developers.google.com/+/mobile/android/getting-started#step_1_enable_the_google_api
  * and follow the steps in "Step 1" to create an OAuth 2.0 client for your package.
  */
-public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<Cursor>, OnTaskCompleted {
+public class LoginActivity extends PlusBaseActivity implements OnTaskCompleted {
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -101,9 +101,16 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             return;
         }
 
+        if(getIntent().getBooleanExtra("fromMain",false)){      //Check if we are coming from the MainActivity
+            Log.e("Setting Login Flag", "Login TRUE");
+            setLoginFlag(true);
+        }else{setLoginFlag(false);}
+
+        //Temporary Limit to Google+ Login only
+        /*
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        populateAutoComplete();
+        //populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -116,7 +123,11 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 return false;
             }
         });
+        */
 
+
+        //Temporary Limit to Google+ Login only
+        /*
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -125,12 +136,19 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             }
         });
 
+
         mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
         mEmailLoginFormView = findViewById(R.id.email_login_form);
+        */
+        mProgressView = findViewById(R.id.login_progress);
         mSignOutButtons = findViewById(R.id.plus_sign_out_buttons);
+
+
+
     }
 
+
+    /*
     private void populateAutoComplete() {
         if (VERSION.SDK_INT >= 14) {
             // Use ContactsContract.Profile (API 14+)
@@ -139,12 +157,12 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             // Use AccountManager (API 8+)
             new SetupEmailAutoCompleteTask().execute(null, null);
         }
-    }
+    }*/
 
 
-    public void launchMainActivity(){
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        startActivity(intent);
+    public void launchMainActivity(View view){
+        setLoginFlag(false);
+        new CheckExistingUserTask().execute();
     }
 
 
@@ -222,6 +240,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
+            /*
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
             mLoginFormView.animate().setDuration(shortAnimTime).alpha(
                     show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
@@ -229,7 +248,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 public void onAnimationEnd(Animator animation) {
                     mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
                 }
-            });
+            });*/
 
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mProgressView.animate().setDuration(shortAnimTime).alpha(
@@ -243,7 +262,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             // The ViewPropertyAnimator APIs are not available, so simply show
             // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            //mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
 
@@ -266,7 +285,11 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             }
         });
         new CheckExistingUserTask().execute();
-        launchMainActivity();
+
+        if(!getLoginFlag()){
+            Log.e("LaunchMain","LAUNCHING MAIN ACTIVITY FROM LOGIN!!!");
+            launchMainActivity(mSignOutButtons);
+        }
     }
 
     @Override
@@ -281,13 +304,14 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
         mSignOutButtons.setVisibility(connected ? View.VISIBLE : View.GONE);
         mPlusSignInButton.setVisibility(connected ? View.GONE : View.VISIBLE);
-        mEmailLoginFormView.setVisibility(connected ? View.GONE : View.VISIBLE);
+        //mEmailLoginFormView.setVisibility(connected ? View.GONE : View.VISIBLE);
     }
 
     @Override
     protected void onPlusClientRevokeAccess() {
         // TODO: Access to the user's G+ account has been revoked.  Per the developer terms, delete
         // any stored user data here.
+
     }
 
     @Override
@@ -306,6 +330,9 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 ConnectionResult.SUCCESS;
     }
 
+
+
+    /*
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return new CursorLoader(this,
@@ -339,6 +366,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
 
     }
+
+    */
 
     @Override
     public void onTaskCompleted(JSONObject obj) {
@@ -403,6 +432,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 while((ln = read.readLine()) != null){
                     builder.append(ln);
                 }
+                read.close();
                 Log.i("Message",conn.getResponseMessage());
                 Log.i("Code", ""+conn.getResponseCode());
                 return builder.toString();
@@ -448,8 +478,11 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Intent main = new Intent(LoginActivity.this, MainActivity.class).putExtra("currentUser", currentUser);
-                startActivity(main);
+                if(!getLoginFlag()){
+                    Intent main = new Intent(LoginActivity.this, MainActivity.class).putExtra("currentUser", currentUser);
+                    startActivity(main);
+                }
+
             }else{
                 new CreateUserEntry().execute(deviceId);
             }
@@ -522,6 +555,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 }
                 Log.i("Message",conn.getResponseMessage());
                 Log.i("Code", ""+conn.getResponseCode());
+                read.close();
                 return builder.toString();
                 //int amt = output.read();
                 //Log.v("NUMBYTESREAD", ""+amt);
