@@ -31,15 +31,20 @@ public abstract class PlusBaseActivity extends ActionBarActivity
 
     // A magic number we will use to know that our sign-in error resolution activity has completed
     private static final int OUR_REQUEST_CODE = 49404;
+    private static final int REQUEST_RESOLVE_ERROR = 1001;
 
     // A flag to stop multiple dialogues appearing for the user
     private boolean mAutoResolveOnFail;
 
     // A flag to track when a connection is already in progress
     public boolean mPlusClientIsConnecting = false;
+    protected boolean mExplicitSignOut = false;
+    protected boolean mInSignInFlow = false;    // set to true when you're in the middle of the
+                                                // sign in flow, to know you should not attempt
+                                                // to connect in onStart()
 
     // This is the helper object that connects to Google Play Services.
-    protected GoogleApiClient mPlusClient;
+    protected GoogleApiClient mGoogleApiClient;
 
     protected Person baseUser = null;
 
@@ -91,7 +96,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
       /*mPlusClient =
                 new PlusClient.Builder(this, this, this).setScopes(Scopes.PLUS_LOGIN,
                         Scopes.PLUS_ME).build();           // Unable to resolve Builder*/
-        mPlusClient = new GoogleApiClient.Builder(this)
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(Plus.API)
@@ -103,7 +108,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
      * Try to sign in the user.
      */
     public void signIn() {
-        if (!mPlusClient.isConnected()) {
+        if (!mGoogleApiClient.isConnected()) {
             // Show the dialog as we are now signing in.
             setProgressBarVisible(true);
             // Make sure that we will start the resolution (e.g. fire the intent and pop up a
@@ -129,8 +134,8 @@ public abstract class PlusBaseActivity extends ActionBarActivity
      * {@link #onConnectionFailed(com.google.android.gms.common.ConnectionResult)}.
      */
     private void initiatePlusClientConnect() {
-        if (!mPlusClient.isConnected() && !mPlusClient.isConnecting()) {
-            mPlusClient.connect();
+        if (!mGoogleApiClient.isConnected() && !mGoogleApiClient.isConnecting()) {
+            mGoogleApiClient.connect();
         }
     }
 
@@ -139,8 +144,8 @@ public abstract class PlusBaseActivity extends ActionBarActivity
      * This will call back to .
      */
     private void initiatePlusClientDisconnect() {
-        if (mPlusClient.isConnected()) {
-            mPlusClient.disconnect();
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
         }
     }
 
@@ -150,11 +155,12 @@ public abstract class PlusBaseActivity extends ActionBarActivity
      */
     public void signOut() {
 
+        mExplicitSignOut = true;
         // We only want to sign out if we're connected.
-        if (mPlusClient.isConnected()) {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             // Clear the default account in order to allow the user to potentially choose a
             // different account from the account chooser.
-            mPlusClient.clearDefaultAccountAndReconnect();
+            Plus.AccountApi.clearDefaultAccount(mGoogleApiClient);
 
             // Disconnect from Google Play Services, then reconnect in order to restart the
             // process from scratch.
@@ -171,9 +177,11 @@ public abstract class PlusBaseActivity extends ActionBarActivity
      */
     public void revokeAccess() {
 
-        if (mPlusClient.isConnected()) {
+        if (mGoogleApiClient.isConnected()) {
+            // user explicitly signed out, so turn off auto sign in
+
             // Clear the default account as in the Sign Out.
-            mPlusClient.clearDefaultAccountAndReconnect();
+            mGoogleApiClient.clearDefaultAccountAndReconnect();
 
             // Revoke access to this entire application. This will call back to
             // onAccessRevoked when it is complete, as it needs to reach the Google
@@ -191,7 +199,10 @@ public abstract class PlusBaseActivity extends ActionBarActivity
     @Override
     protected void onStart() {
         super.onStart();
-        initiatePlusClientConnect();
+        if (!mInSignInFlow && !mExplicitSignOut) {
+            // auto sign in
+            mGoogleApiClient.connect();
+        }
     }
 
     @Override
@@ -238,19 +249,22 @@ public abstract class PlusBaseActivity extends ActionBarActivity
      */
     @Override
     protected void onActivityResult(int requestCode, int responseCode, Intent intent) {
-        updateConnectButtonState();
-        if (requestCode == OUR_REQUEST_CODE && responseCode == RESULT_OK) {
-            // If we have a successful result, we will want to be able to resolve any further
-            // errors, so turn on resolution with our flag.
-            mAutoResolveOnFail = true;
-            // If we have a successful result, let's call connect() again. If there are any more
-            // errors to resolve we'll get our onConnectionFailed, but if not,
-            // we'll get onConnected.
-            initiatePlusClientConnect();
-        } else if (requestCode == OUR_REQUEST_CODE && responseCode != RESULT_OK) {
-            // If we've got an error we can't resolve, we're no longer in the midst of signing
-            // in, so we can stop the progress spinner.
-            setProgressBarVisible(false);
+        if (requestCode == REQUEST_RESOLVE_ERROR) {
+
+            if (requestCode == OUR_REQUEST_CODE && responseCode == RESULT_OK) {
+                // If we have a successful result, we will want to be able to resolve any further
+                // errors, so turn on resolution with our flag.
+                mAutoResolveOnFail = true;
+                // If we have a successful result, let's call connect() again. If there are any more
+                // errors to resolve we'll get our onConnectionFailed, but if not,
+                // we'll get onConnected.
+                initiatePlusClientConnect();
+                updateConnectButtonState();
+            } else if (requestCode == OUR_REQUEST_CODE && responseCode != RESULT_OK) {
+                // If we've got an error we can't resolve, we're no longer in the midst of signing
+                // in, so we can stop the progress spinner.
+                setProgressBarVisible(false);
+            }
         }
     }
 
@@ -262,16 +276,16 @@ public abstract class PlusBaseActivity extends ActionBarActivity
         updateConnectButtonState();
         setProgressBarVisible(false);
         onPlusClientSignIn();
-        if (Plus.PeopleApi.getCurrentPerson(mPlusClient) != null) {
-            baseUser = Plus.PeopleApi.getCurrentPerson(mPlusClient);
+        if (Plus.PeopleApi.getCurrentPerson(mGoogleApiClient) != null) {
+            baseUser = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
         }
-        Plus.PeopleApi.loadVisible(mPlusClient, null)
+        Plus.PeopleApi.loadVisible(mGoogleApiClient, null)
                 .setResultCallback(this);
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        mPlusClient.connect();
+        mGoogleApiClient.connect();
     }
 
 
@@ -305,7 +319,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
                 // The intent was canceled before it was sent.  Return to the default
                 // state and attempt to connect to get an updated ConnectionResult.
                 mIntentInProgress = false;
-                mPlusClient.connect();
+                mGoogleApiClient.connect();
             }
         }
     }
@@ -317,7 +331,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
     }
 
     public GoogleApiClient getPlusClient() {
-        return mPlusClient;
+        return mGoogleApiClient;
     }
 
 }

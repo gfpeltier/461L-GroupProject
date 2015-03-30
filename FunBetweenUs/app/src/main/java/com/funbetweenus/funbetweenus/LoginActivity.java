@@ -465,21 +465,21 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
         @Override
         protected void onPreExecute(){
-            while(!mPlusClient.isConnected()){
+            while(!mGoogleApiClient.isConnected()){
                 try {
                     if(!isPlusClientConnecting()){
-                        mPlusClient.connect();
+                        mGoogleApiClient.connect();
                     }
                     Thread.sleep(2000);
                 }catch(Exception e){
                     e.printStackTrace();
                 }
             }
-            if(mPlusClient != null && mPlusClient.isConnected()){
+            if(mGoogleApiClient != null && mGoogleApiClient.isConnected()){
                 //TODO: Need to fix this with Necessary code for GoogleApiClient
                 if(baseUser != null){
                     user = baseUser;
-                    uEmail = Plus.AccountApi.getAccountName(mPlusClient);
+                    uEmail = Plus.AccountApi.getAccountName(mGoogleApiClient);
                 }
                 //user = mPlusClient.;
                 //uEmail = mPlusClient.getAccountName();

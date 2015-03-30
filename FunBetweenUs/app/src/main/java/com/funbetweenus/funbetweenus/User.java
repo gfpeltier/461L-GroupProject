@@ -57,7 +57,8 @@ public class User implements Parcelable {
 
 
     public String getName(){
-        return name;
+        if(!name.isEmpty()){return name;
+        }else{return "name null";}
     }
 
     public String getEmail(){
