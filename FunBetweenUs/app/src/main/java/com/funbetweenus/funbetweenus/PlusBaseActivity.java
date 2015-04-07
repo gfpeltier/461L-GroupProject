@@ -254,33 +254,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
             initiatePlusClientConnect();
         }
     }
-
-    /**
-     * An earlier connection failed, and we're now receiving the result of the resolution attempt
-     * by PlusClient.
-     *
-     * @see #onConnectionFailed(ConnectionResult)
-     */
-    /*@Override
-    protected void onActivityResult(int requestCode, int responseCode, Intent intent) {
-        if (requestCode == REQUEST_RESOLVE_ERROR) {
-
-            if (requestCode == OUR_REQUEST_CODE && responseCode == RESULT_OK) {
-                // If we have a successful result, we will want to be able to resolve any further
-                // errors, so turn on resolution with our flag.
-                mAutoResolveOnFail = true;
-                // If we have a successful result, let's call connect() again. If there are any more
-                // errors to resolve we'll get our onConnectionFailed, but if not,
-                // we'll get onConnected.
-                initiatePlusClientConnect();
-                updateConnectButtonState();
-            } else if (requestCode == OUR_REQUEST_CODE && responseCode != RESULT_OK) {
-                // If we've got an error we can't resolve, we're no longer in the midst of signing
-                // in, so we can stop the progress spinner.
-                setProgressBarVisible(false);
-            }
-        }
-    }*/
+    
 
     protected void onActivityResult(int requestCode, int responseCode, Intent intent) {
         if (requestCode == OUR_REQUEST_CODE) {

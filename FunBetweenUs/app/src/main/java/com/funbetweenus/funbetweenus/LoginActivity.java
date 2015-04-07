@@ -284,7 +284,6 @@ public class LoginActivity extends PlusBaseActivity implements OnTaskCompleted {
                 revokeAccess();
             }
         });
-        new CheckExistingUserTask().execute();
 
         if(!getLoginFlag()){
             Log.e("LaunchMain","LAUNCHING MAIN ACTIVITY FROM LOGIN!!!");
@@ -484,6 +483,7 @@ public class LoginActivity extends PlusBaseActivity implements OnTaskCompleted {
                 }
 
             }else{
+                Log.e("NEW USER","Creating new user " + deviceId);
                 new CreateUserEntry().execute(deviceId);
             }
         }
