@@ -254,7 +254,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
             initiatePlusClientConnect();
         }
     }
-    
+
 
     protected void onActivityResult(int requestCode, int responseCode, Intent intent) {
         if (requestCode == OUR_REQUEST_CODE) {
