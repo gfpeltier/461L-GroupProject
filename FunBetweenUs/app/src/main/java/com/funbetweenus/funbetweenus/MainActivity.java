@@ -2,6 +2,7 @@ package com.funbetweenus.funbetweenus;
 
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.SensorEventListener;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
@@ -23,6 +24,7 @@ import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -70,6 +72,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             TextView txt = (TextView)findViewById(R.id.nav_bar_greet);
             txt.setText(greet);
         }
+
+
 
 
         mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mDrawerOptions));

@@ -39,6 +39,11 @@ public abstract class PlusBaseActivity extends ActionBarActivity
     // Flag to determine if returning from MainActivity
     private boolean mReturnStatus = false;
 
+    /* Track whether the sign-in button has been clicked so that we know to resolve
+     * all issues preventing sign-in without waiting.
+     */
+    private boolean mSignInClicked;
+
     // A flag to track when a connection is already in progress
     public boolean mPlusClientIsConnecting = false;
     protected boolean mExplicitSignOut = false;
@@ -113,12 +118,13 @@ public abstract class PlusBaseActivity extends ActionBarActivity
      * Try to sign in the user.
      */
     public void signIn() {
-        if (!mGoogleApiClient.isConnected()) {
+        if (!mGoogleApiClient.isConnecting()) {
             // Show the dialog as we are now signing in.
             setProgressBarVisible(true);
             // Make sure that we will start the resolution (e.g. fire the intent and pop up a
             // dialog for the user) for any errors that come in.
-            mAutoResolveOnFail = true;
+            //mAutoResolveOnFail = true;
+            mSignInClicked = true;
             // We should always have a connection result ready to resolve,
             // so we can start that process.
             if (mConnectionResult != null) {
@@ -255,7 +261,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
      *
      * @see #onConnectionFailed(ConnectionResult)
      */
-    @Override
+    /*@Override
     protected void onActivityResult(int requestCode, int responseCode, Intent intent) {
         if (requestCode == REQUEST_RESOLVE_ERROR) {
 
@@ -272,6 +278,20 @@ public abstract class PlusBaseActivity extends ActionBarActivity
                 // If we've got an error we can't resolve, we're no longer in the midst of signing
                 // in, so we can stop the progress spinner.
                 setProgressBarVisible(false);
+            }
+        }
+    }*/
+
+    protected void onActivityResult(int requestCode, int responseCode, Intent intent) {
+        if (requestCode == OUR_REQUEST_CODE) {
+            if (responseCode != RESULT_OK) {
+                mSignInClicked = false;
+            }
+
+            mIntentInProgress = false;
+
+            if (!mGoogleApiClient.isConnecting()) {
+                mGoogleApiClient.connect();
             }
         }
     }
@@ -307,6 +327,8 @@ public abstract class PlusBaseActivity extends ActionBarActivity
         onPlusClientSignOut();
     }*/
 
+
+
     /**
      * Connection failed for some reason (called by PlusClient)
      * Try and resolve the result.  Failure here is usually not an indication of a serious error,
@@ -314,6 +336,7 @@ public abstract class PlusBaseActivity extends ActionBarActivity
      *
      * @see #onActivityResult(int, int, Intent)
      */
+    /*
     @Override
     public void onConnectionFailed(ConnectionResult result) {
         updateConnectButtonState();
@@ -331,7 +354,36 @@ public abstract class PlusBaseActivity extends ActionBarActivity
             }
         }
     }
+    */
+    /* A helper method to resolve the current ConnectionResult error. */
+    private void resolveSignInError() {
+        if (mConnectionResult.hasResolution()) {
+            try {
+                mIntentInProgress = true;
+                startIntentSenderForResult(mConnectionResult.getResolution().getIntentSender(),
+                        OUR_REQUEST_CODE, null, 0, 0, 0);
+            } catch (IntentSender.SendIntentException e) {
+                // The intent was canceled before it was sent.  Return to the default
+                // state and attempt to connect to get an updated ConnectionResult.
+                mIntentInProgress = false;
+                mGoogleApiClient.connect();
+            }
+        }
+    }
 
+    public void onConnectionFailed(ConnectionResult result) {
+        if (!mIntentInProgress) {
+            // Store the ConnectionResult so that we can use it later when the user clicks
+            // 'sign-in'.
+            mConnectionResult = result;
+
+            if (mSignInClicked) {
+                // The user has already clicked 'sign-in' so we attempt to resolve all
+                // errors until the user is signed in, or they cancel.
+                resolveSignInError();
+            }
+        }
+    }
 
     @Override
     public void onResult(People.LoadPeopleResult peopleData){
