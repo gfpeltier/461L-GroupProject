@@ -9,10 +9,14 @@
     <string name="geo_search_hint">Where are you going?</string>
     <string name="geo_search_button_text">Go</string>
     <string name="radius_slider_label">Search Radius:</string>
+    <string name="user_mode_on_str">Meet a Friend!</string>
+    <string name="user_mode_off_str">Just Me!</string>
+
     <string-array name="alone_or_friend_array">
         <item>Just Me!</item>
         <item>Meet a Friend!</item>
     </string-array>
+
     <string-array name="what_to_do_array">
         <item>Restaurants</item>
         <item>Bars</item>
@@ -21,6 +25,7 @@
         <item>Gems</item>
         <item>Out N About</item>
     </string-array>
+
     <!-- Nav Drawer Menu Items -->
     <string-array name="nav_drawer_items">
         <item >Sign Out</item>

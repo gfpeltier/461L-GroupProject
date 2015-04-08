@@ -10,4 +10,43 @@
         <item name="android:windowTitleSize">0dp</item>
     </style>
 
+    <style name="SwitchText">
+        <item name="android:paddingLeft">8px</item>
+        <item name="android:paddingBottom">8px</item>
+        <item name="android:textColor">#FFeeFFee</item>
+        <item name="android:textSize">24dip</item>
+        <item name="android:shadowColor">#BB000000</item>
+        <item name="android:shadowDx">1</item>
+        <item name="android:shadowDy">1</item>
+        <item name="android:shadowRadius">1</item>
+    </style>
+
+
+
+
+    <style name="mySwitchStyle">
+        <item name="sw_track">@drawable/switch_track_green</item>
+        <item name="sw_thumb">@drawable/background_fenced</item>
+        <item name="sw_switchTextAppearanceAttrib">@style/mySwitchTextAppearance</item>
+        <item name="sw_textOn">ON</item>
+        <item name="sw_textOff">OFF</item>
+        <item name="sw_pushStyle">false</item>
+        <item name="sw_textOnThumb">true</item>
+        <item name="sw_thumbExtraMovement">0dp</item>
+        <item name="sw_thumbTextPadding">6dp</item>
+        <item name="sw_trackTextPadding">6dp</item>
+        <item name="sw_switchMinWidth">69dp</item>
+        <item name="sw_switchMinHeight">36dp</item>
+        <item name="sw_switchPadding">6dp</item>
+    </style>
+
+    <style name="mySwitchTextAppearance">
+        <item name="textColor">#FFeeFFee</item>
+        <item name="textColorHighlight">#FFeeFFee</item>
+        <item name="textColorHint">#FFeeFFee</item>
+        <item name="textColorLink">#FFeeFFee</item>
+        <item name="textSize">16sp</item>
+        <item name="textStyle">normal</item>
+    </style>
+
 </resources>
