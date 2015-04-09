@@ -26,27 +26,30 @@
                 android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginBottom="32dp" />
 
-            <LinearLayout android:id="@+id/plus_sign_out_buttons"
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:visibility="gone" android:weightSum="3">
+            <RelativeLayout android:id="@+id/plus_sign_out_buttons"
+                android:layout_width="match_parent" android:layout_height="match_parent"
+                android:visibility="gone">
 
                 <Button android:id="@+id/plus_sign_out_button" style="?android:textAppearanceSmall"
-                    android:layout_width="match_parent" android:layout_height="match_parent"
-                    android:layout_weight="1" android:text="@string/plus_sign_out" />
+                    android:layout_width="fill_parent" android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true" android:text="@string/plus_sign_out" />
 
                 <Button android:id="@+id/plus_disconnect_button"
-                    style="?android:textAppearanceSmall" android:layout_width="match_parent"
-                    android:layout_height="match_parent" android:layout_weight="1"
+                    style="?android:textAppearanceSmall" android:layout_width="fill_parent"
+                    android:layout_height="wrap_content" android:layout_weight="1" android:layout_centerHorizontal="true"
+                    android:layout_below="@id/plus_sign_out_button"
                     android:text="@string/plus_disconnect" />
                 <Button
                     android:id="@+id/continue_to_main_button"
-                    android:layout_width="match_parent"
+                    style="?android:textAppearanceSmall"
+                    android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_centerHorizontal="true"
+                    android:layout_below="@id/plus_disconnect_button"
                     android:text="@string/continue_to_app"
                     android:onClick="launchMainActivity"/>
 
-            </LinearLayout>
+            </RelativeLayout>
 
 
             <!-- Temporarily limit to Google+ Login only -->

@@ -156,6 +156,7 @@ public class TitleActivity extends ActionBarActivity implements OnTaskCompleted 
                 }
                 Log.i("Message",conn.getResponseMessage());
                 Log.i("Code", ""+conn.getResponseCode());
+                conn.disconnect();
                 return builder.toString();
                 //int amt = output.read();
                 //Log.v("NUMBYTESREAD", ""+amt);
