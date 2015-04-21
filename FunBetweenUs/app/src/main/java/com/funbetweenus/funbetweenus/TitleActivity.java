@@ -42,6 +42,7 @@ public class TitleActivity extends ActionBarActivity implements OnTaskCompleted 
 
     @Override
     public void onTaskCompleted(JSONObject obj) {
+
         String code = null;
         JSONObject userObject = null;
 
