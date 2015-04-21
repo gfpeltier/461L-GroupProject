@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">Fun Between Us</string>
 
-    <string name="hello_world">Hello world!</string>
+    <string name="cancel">Cancel</string>
+    <string name="submit">Submit</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="serverIPAddress">104.236.195.188</string>
@@ -11,6 +12,14 @@
     <string name="radius_slider_label">Search Radius:</string>
     <string name="user_mode_on_str">Meet a Friend!</string>
     <string name="user_mode_off_str">Just Me!</string>
+    <string name="find_friend">Enter your friend\'s Email</string>
+    <string name="friend_search_btn">Search</string>
+    <string name="find_friend_dialog_title">Search for Friend!</string>
+    <string name="find_nearby_address">Enter an address nearby</string>
+    <string name="enter_nearby_address_dialog_title">Find a Place Nearby</string>
+    <string name="gem_title_hint">Title</string>
+    <string name="gem_description_hint">Describe your gem!</string>
+    <string name="gem_dialog_title">Tell us about your Gem!</string>
 
     <string-array name="alone_or_friend_array">
         <item>Just Me!</item>
@@ -28,6 +37,7 @@
 
     <!-- Nav Drawer Menu Items -->
     <string-array name="nav_drawer_items">
+        <item>Add Gem</item>
         <item >Sign Out</item>
         <item >Settings</item>
     </string-array>

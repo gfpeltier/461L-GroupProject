@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:orientation="vertical" android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <EditText
+        android:id="@+id/gem_title_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLength="45"
+        android:hint="@string/gem_title_hint"/>
+    <EditText
+        android:id="@+id/gem_description_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLength="300"
+        android:hint="@string/gem_description_hint"/>
 
 </LinearLayout>

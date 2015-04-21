@@ -12,9 +12,6 @@ public class DirectionsRoute {
 
     private int distance;
     private ArrayList<DirectionsLeg> legs;
-
-
-
     private ArrayList<LatLng> bounds;
 
     public DirectionsRoute(ArrayList<DirectionsLeg> mLegs, ArrayList<LatLng> mBounds){
@@ -65,5 +62,20 @@ public class DirectionsRoute {
 
     public void setBounds(ArrayList<LatLng> bounds) {
         this.bounds = bounds;
+    }
+
+    public boolean equals(DirectionsRoute other){
+        if(distance != other.getDistance()){return false;}
+        Iterator<LatLng> i = bounds.iterator();
+        while(i.hasNext()){
+            if(!other.getBounds().contains(i.next())){
+                return false;
+            }
+        }
+        Iterator<DirectionsLeg> j = legs.iterator();
+        while (j.hasNext()){
+            if(!other.getLegs().contains(j.next())){return false;}
+        }
+        return true;
     }
 }
