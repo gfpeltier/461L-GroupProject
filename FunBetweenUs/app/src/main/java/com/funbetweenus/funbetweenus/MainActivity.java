@@ -29,11 +29,18 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.funbetweenus.funbetweenus.activityFind.ActivitySearch;
+import com.funbetweenus.funbetweenus.activityFind.RequestHandler;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -59,7 +66,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i("CURRENT USER NAME", user.getName());
             greet += user.getName();
             //setTitle(greet);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         ImageButton img = (ImageButton) findViewById(R.id.menu_button);
@@ -68,8 +75,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
         String[] mDrawerOptions = getResources().getStringArray(R.array.nav_drawer_items);
 
-        if(user != null){
-            TextView txt = (TextView)findViewById(R.id.nav_bar_greet);
+        if (user != null) {
+            TextView txt = (TextView) findViewById(R.id.nav_bar_greet);
             txt.setText(greet);
         }
 
@@ -83,30 +90,34 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 Log.e("CLICK MENU", "MENU BUTTON CLICKED!!!!");
-                if(!mDrawerLayout.isDrawerOpen(mDrawerFrame)){
+                if (!mDrawerLayout.isDrawerOpen(mDrawerFrame)) {
                     Log.e("Drawer Status", "Closed!");
                     mDrawerLayout.openDrawer(mDrawerFrame);
-                    if(mDrawerLayout.isDrawerVisible(mDrawerFrame)){
-                        Log.e("Drawer Vis","Drawer Now OPEN AND VISIBLE");
-                    }else{Log.e("Drawer Vis","Drawer Now OPEN AND NOT VISIBLE");}
-                }else{
+                    if (mDrawerLayout.isDrawerVisible(mDrawerFrame)) {
+                        Log.e("Drawer Vis", "Drawer Now OPEN AND VISIBLE");
+                    } else {
+                        Log.e("Drawer Vis", "Drawer Now OPEN AND NOT VISIBLE");
+                    }
+                } else {
                     Log.e("Drawer Status", "Open!");
-                    mDrawerLayout.closeDrawer(mDrawerFrame);}
+                    mDrawerLayout.closeDrawer(mDrawerFrame);
+                }
 
             }
         });
-
+        ActivitySearch search = new ActivitySearch();
+        search.activitySearchMain();
     }
 
 
-    public void initializeSpinners(){
+    public void initializeSpinners() {
         Spinner spinner = (Spinner) findViewById(R.id.alone_or_friend_spinner);
-            // Create an ArrayAdapter using the string array and a default spinner layout
+        // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.alone_or_friend_array, android.R.layout.simple_spinner_item);
-            // Specify the layout to use when the list of choices appears
+        // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            // Apply the adapter to the spinner
+        // Apply the adapter to the spinner
         spinner.setAdapter(adapter);
         spinner = (Spinner) findViewById(R.id.what_to_do_spinner);
         adapter = ArrayAdapter.createFromResource(this,
@@ -139,21 +150,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapReady(GoogleMap map) {
-        mMap = map;
-        LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+     /*   mMap = map;
+       LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Log.e("Location", location.toString());
         LatLng userLoc = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.setMyLocationEnabled(true);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLoc, 13));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLoc, 13));*/
     }
 
-    private void selectItem(int pos){
+    private void selectItem(int pos) {
         Log.e("NavTableSelect", "" + pos);
-        switch (pos){
+        switch (pos) {
             case 0:                 // Sign Out
                 Log.e("NavTable", "Sign Out attempted");
                 Intent logoutIntent = new Intent(MainActivity.this, LoginActivity.class);
-                logoutIntent.putExtra("fromMain",true);
+                logoutIntent.putExtra("fromMain", true);
                 startActivity(logoutIntent);
                 break;
             case 1:                 // Settings
@@ -165,23 +177,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-
-
-    public void showToast(String msg){
+    public void showToast(String msg) {
         Context context = getApplicationContext();
         Toast toast = Toast.makeText(context, msg, Toast.LENGTH_SHORT);
         toast.show();
     }
 
 
-
-    private class DrawerItemClickListener implements ListView.OnItemClickListener{
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             selectItem(position);
         }
     }
+
 }
 
 
