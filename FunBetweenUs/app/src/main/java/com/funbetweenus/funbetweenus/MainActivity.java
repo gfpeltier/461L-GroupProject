@@ -35,6 +35,7 @@ import com.funbetweenus.funbetweenus.data.Directions;
 import com.funbetweenus.funbetweenus.data.DirectionsLeg;
 import com.funbetweenus.funbetweenus.data.DirectionsRoute;
 import com.funbetweenus.funbetweenus.data.DirectionsStep;
+import com.funbetweenus.funbetweenus.utils.PointsAlgorithm;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -295,6 +296,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mRoute.addLeg(mLeg);
                 }
                 routesToDestination.add(mRoute);
+                ArrayList<DirectionsStep> stepsArray = null;
+                ArrayList<LatLng> pointsFromAlg = null;
+                PointsAlgorithm needPoints = new PointsAlgorithm();
+                for(int l = 0; l<mRoute.getLegs().size(); l++){
+                    stepsArray.addAll(mRoute.getLegs().get(l).getSteps());
+                }
+                pointsFromAlg.addAll(needPoints.getPoints(stepsArray));
+                Log.e("points", pointsFromAlg.toString());
             }
         }catch (Exception e){
             e.printStackTrace();
