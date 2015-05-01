@@ -45,4 +45,11 @@ public class DirectionsStep {
     public String toString(){
         return "{Start: "+ startLocation.latitude +", "+ startLocation.longitude+ " End: "+endLocation.latitude +", "+endLocation.longitude +" Distance: "+distance+"}";
     }
+
+
+    public boolean equals(DirectionsStep other){
+        if(this.startLocation == other.getStartLocation() && this.endLocation == other.getEndLocation() && this.distance == other.getDistance()){
+            return true;
+        }else{return false;}
+    }
 }

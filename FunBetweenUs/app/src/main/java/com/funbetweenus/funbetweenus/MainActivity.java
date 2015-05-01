@@ -1,31 +1,43 @@
 package com.funbetweenus.funbetweenus;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
+import android.media.Image;
 import android.os.AsyncTask;
+import android.os.Looper;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,11 +47,15 @@ import com.funbetweenus.funbetweenus.data.Directions;
 import com.funbetweenus.funbetweenus.data.DirectionsLeg;
 import com.funbetweenus.funbetweenus.data.DirectionsRoute;
 import com.funbetweenus.funbetweenus.data.DirectionsStep;
+
+import com.funbetweenus.funbetweenus.data.Gem;
 import com.funbetweenus.funbetweenus.utils.PointsAlgorithm;
+import com.funbetweenus.funbetweenus.utils.SubmitGemTask;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -54,11 +70,16 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import static com.funbetweenus.funbetweenus.R.id.nearby_address_search_btn;
 
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, TextWatcher, AdapterView.OnItemSelectedListener {
@@ -78,10 +99,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private AutoCompleteTextView locationInput;
     private Address destination;
     private Marker destMarker;
+    private Marker userMarker;
+    private boolean noGPSFlag;
+    private boolean placeGem;
 
     private ArrayList<DirectionsRoute> routesToDestination;
     private List<LatLng> directionsPathPoints;
     private Polyline fullPath;
+    private boolean viewPathState;
+    private int lowLimitSearchRadius;
+    private int highLimitSearchRadius;
 
     private Context mainCon;
 
@@ -103,7 +130,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }catch (Exception e){
             e.printStackTrace();
         }
-        ImageButton img = (ImageButton) findViewById(R.id.menu_button);
+
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerFrame = (FrameLayout) findViewById(R.id.drawer_frame);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
@@ -124,6 +151,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, mDrawerOptions));
         mDrawerList.setOnItemClickListener((ListView.OnItemClickListener) new DrawerItemClickListener());
 
+        ImageButton img = (ImageButton) findViewById(R.id.menu_button);
         img.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -141,14 +169,89 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+
         mainCon = getBaseContext();
         locationInput = (AutoCompleteTextView) findViewById(R.id.geo_search_edit);
         locationInput.addTextChangedListener(this);
         locationInput.setOnItemSelectedListener(this);
         locationInput.setThreshold(THRESHOLD);
 
+        setSearchBounds(1, 5);         //Initialize search bounds 1-5 miles
+        setSliderReading();
+
     }
 
+
+    private void setSearchBounds(int low, int high){
+        lowLimitSearchRadius = low;
+        highLimitSearchRadius = high;
+    }
+
+    private double evaluateRealRadius(int progress){
+        int constant = lowLimitSearchRadius;
+        double increment = ((highLimitSearchRadius - lowLimitSearchRadius) / 100.0);
+        return (progress * increment) + constant;
+    }
+
+    public static double roundDouble(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
+    private void setSliderReading(){
+        SeekBar seekBar = (SeekBar) findViewById(R.id.radius_slider);
+        int progress = seekBar.getProgress();
+        double realRadius = evaluateRealRadius(progress);
+        TextView reading = (TextView) findViewById(R.id.radius_reading);
+        reading.setText(realRadius+"mi");
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                TextView reading = (TextView) findViewById(R.id.radius_reading);
+                double realVal = evaluateRealRadius(progress);
+                DecimalFormat df = new DecimalFormat("####0.00");
+                //Log.e("ProgressChanged", ""+df.format(realVal));
+                reading.setText(df.format(realVal)+"mi");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
+
+
+    public void onToggleClicked(View view){
+        boolean on = ((ToggleButton) view).isChecked();
+        Log.e("ToggleMode","Toggling user mode");
+        if(on){
+            Log.e("User Mode On", "Find a friend mode");
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater inflater = getLayoutInflater();
+            builder.setView(inflater.inflate(R.layout.dialog_find_friend, null))
+                .setTitle(getString(R.string.find_friend_dialog_title))
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                        ToggleButton tgl = (ToggleButton) findViewById(R.id.user_mode_switch);
+                        tgl.setChecked(false);
+                    }
+                });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }else{
+            //TODO: anything to do when set to "JUST ME!"
+        }
+    }
 
     public void initializeSpinners(){
         /*Spinner spinner = (Spinner) findViewById(R.id.alone_or_friend_spinner);
@@ -168,18 +271,33 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void fixZoomOverPath(){
         List<LatLng> points = fullPath.getPoints(); // route is instance of PolylineOptions
-
         LatLngBounds.Builder bc = new LatLngBounds.Builder();
-
         for (LatLng item : points) {
             bc.include(item);
         }
-
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bc.build(), 50));
     }
 
-    public void drawDirectionsPath(){
+    private void updateViewState(boolean showUI){
+        if(!showUI){
 
+            ImageButton arrowDown = (ImageButton) findViewById(R.id.show_ui_button);
+            arrowDown.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    viewPathState = false;
+                    updateViewState(true);
+                }
+            });
+        }
+        findViewById(R.id.show_ui_button).setVisibility(showUI ? View.GONE:View.VISIBLE);
+        findViewById(R.id.user_mode_switch).setVisibility(showUI ? View.VISIBLE:View.GONE);
+        findViewById(R.id.what_to_do_spinner).setVisibility(showUI ? View.VISIBLE:View.GONE);
+        findViewById(R.id.user_search_area).setVisibility(showUI ? View.VISIBLE:View.GONE);
+        findViewById(R.id.radius_group).setVisibility(showUI ? View.VISIBLE:View.GONE);
+    }
+
+    public void drawDirectionsPath(){
 
         if(directionsPathPoints != null && !directionsPathPoints.isEmpty()){
             PolylineOptions pathOptions = new PolylineOptions();
@@ -189,10 +307,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
             pathOptions.color(Color.BLUE);
             fullPath = mMap.addPolyline(pathOptions);
+            viewPathState = true;
+            updateViewState(false);
             fixZoomOverPath();
         }else{showToast("An error has occurred and we cannot display directions");}
-
-
         /*if(routesToDestination != null && !routesToDestination.isEmpty()){
             DirectionsRoute bestRoute = routesToDestination.get(0);
             ArrayList<DirectionsLeg> legs = bestRoute.getLegs();
@@ -296,14 +414,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mRoute.addLeg(mLeg);
                 }
                 routesToDestination.add(mRoute);
-                ArrayList<DirectionsStep> stepsArray = null;
-                ArrayList<LatLng> pointsFromAlg = null;
-                PointsAlgorithm needPoints = new PointsAlgorithm();
-                for(int l = 0; l<mRoute.getLegs().size(); l++){
-                    stepsArray.addAll(mRoute.getLegs().get(l).getSteps());
-                }
-                pointsFromAlg.addAll(needPoints.getPoints(stepsArray));
-                Log.e("points", pointsFromAlg.toString());
+                ArrayList<LatLng> points = null;
+                PointsAlgorithm pointsGetter = new PointsAlgorithm();
+                points.addAll(pointsGetter.getPoints(routesToDestination.get(0)));
+                Log.e("points", points.toString());
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -335,26 +449,190 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    private void showFindNearbyDialog(){
+        showToast("Uh Oh... It looks like we can't find your location. Please make sure location services are enabled");
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        builder.setView(inflater.inflate(R.layout.dialog_enter_nearby_address, null))
+                .setTitle(getString(R.string.enter_nearby_address_dialog_title))
+                .setNeutralButton(R.id.nearby_address_search_btn, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        EditText edit = (EditText) findViewById(R.id.nearby_address_edit);
+                        if (edit.getText() != null) {
+                            noGPSCurrentLocation();
+                        } else {
+                            showToast("Please enter a nearby address first");
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        final AutoCompleteTextView nearbyLocationEdit = (AutoCompleteTextView) dialog.findViewById(R.id.nearby_address_edit);
+        //nearbyLocationEdit.addTextChangedListener(this);
+        //nearbyLocationEdit.setOnItemSelectedListener(this);
+        //nearbyLocationEdit.setThreshold(THRESHOLD);
+        Button nearbyLocationSearch = (Button) dialog.findViewById(nearby_address_search_btn);
+        dialog.show();
+    }
+
+
+    private long getGPSCheckMilliSecsFromPrefs(){
+        return System.currentTimeMillis() - 100000000;
+    }
+
+    /**
+     * try to get the 'best' location selected from all providers
+     */
+    private Location getBestLocation() {
+        Location gpslocation = getLocationByProvider(LocationManager.GPS_PROVIDER);
+        Location networkLocation =
+                getLocationByProvider(LocationManager.NETWORK_PROVIDER);
+        // if we have only one location available, the choice is easy
+        if (gpslocation == null) {
+            Log.d("TAG", "No GPS Location available.");
+            return networkLocation;
+        }
+        if (networkLocation == null) {
+            Log.d("TAG", "No Network Location available");
+            return gpslocation;
+        }
+        // a locationupdate is considered 'old' if its older than the configured
+        // update interval. this means, we didn't get a
+        // update from this provider since the last check
+        long old = System.currentTimeMillis() - getGPSCheckMilliSecsFromPrefs();
+        boolean gpsIsOld = (gpslocation.getTime() < old);
+        boolean networkIsOld = (networkLocation.getTime() < old);
+        // gps is current and available, gps is better than network
+        if (!gpsIsOld) {
+            Log.d("TAG", "Returning current GPS Location");
+            return gpslocation;
+        }
+        // gps is old, we can't trust it. use network location
+        if (!networkIsOld) {
+            Log.d("TAG", "GPS is old, Network is current, returning network");
+            return networkLocation;
+        }
+        // both are old return the newer of those two
+        if (gpslocation.getTime() > networkLocation.getTime()) {
+            Log.d("TAG", "Both are old, returning gps(newer)");
+            return gpslocation;
+        } else {
+            Log.d("TAG", "Both are old, returning network(newer)");
+            return networkLocation;
+        }
+    }
+
+    /**
+     * get the last known location from a specific provider (network/gps)
+     */
+    private Location getLocationByProvider(String provider) {
+        Location location = null;
+        LocationManager locationManager = (LocationManager) getApplicationContext()
+                .getSystemService(Context.LOCATION_SERVICE);
+        if (!locationManager.isProviderEnabled(provider)) {
+            return null;
+        }
+
+        try {
+            if (locationManager.isProviderEnabled(provider)) {
+                location = locationManager.getLastKnownLocation(provider);
+            }
+        } catch (IllegalArgumentException e) {
+            Log.d("TAG", "Cannot access Provider " + provider);
+        }
+        return location;
+    }
+
+
+    private void gatherGemData(final Gem gem, final Marker marker){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        builder.setView(inflater.inflate(R.layout.dialog_enter_gem_data, null))
+                .setTitle(getString(R.string.gem_dialog_title))
+                .setPositiveButton(R.string.submit, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //TODO: Need to add implementation for adding gem to back end
+                        Dialog d = (Dialog) dialog;
+                        EditText gemTitleEdit = (EditText) d.findViewById(R.id.gem_title_text);
+                        EditText gemDescriptionEdit = (EditText) d.findViewById(R.id.gem_description_text);
+                        String gemTitle = gemTitleEdit.getText().toString().trim();
+                        String gemDescription = gemDescriptionEdit.getText().toString().trim();
+                        if (!gemTitle.equals(null) && !gemDescription.equals(null) && !gemTitle.equals("") && !gemDescription.equals("")) {
+                            gem.setTitle(gemTitle);
+                            gem.setDescription(gemDescription);
+                            new SubmitGemTask().execute(gem);
+                            Log.e("GEM_TITLE", gemTitle);
+                            Log.e("GEM_DESCRIPTION", gemDescription);
+                            marker.setTitle(gem.getTitle());
+                            marker.setSnippet(gem.getDescription());
+                            dialog.dismiss();
+                        } else {
+                            showToast("You must add a title and description to save your gem");
+                            marker.remove();
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                        marker.remove();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
         LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        boolean isGPSEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean isNetworkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        noGPSFlag = false;
+        Location location = getBestLocation();
         LatLng userLoc = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.setMyLocationEnabled(true);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLoc, 13));
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                Log.v("Tap Coordinates", latLng.latitude + " " + latLng.longitude);
+                if(placeGem){
+                    Marker userMark = mMap.addMarker(new MarkerOptions()
+                            .position(latLng)
+                            .title("User Placed Gem"));
+                    Gem placedGem = new Gem(userMark.getPosition(), user);
+                    placeGem = false;
+                    gatherGemData(placedGem, userMark);
+                }else{return;}
+            }
+        });
     }
 
     private void selectItem(int pos){
         Log.e("NavTableSelect", "" + pos);
         switch (pos){
-            case 0:                 // Sign Out
+            case 0:                 // Add Gem
+                Log.e("NavTable", "Attempt to add Gem to map");
+                mDrawerLayout.closeDrawer(mDrawerFrame);
+                placeGem = true;
+                showToast("Tap on the map where you would like to place a Gem!");
+                break;
+            case 1:                 // Sign Out
                 Log.e("NavTable", "Sign Out attempted");
                 Intent logoutIntent = new Intent(MainActivity.this, LoginActivity.class);
                 logoutIntent.putExtra("fromMain",true);
                 startActivity(logoutIntent);
                 break;
-            case 1:                 // Settings
+            case 2:                 // Settings
                 Log.e("NavTable", "Settings view attempted");
                 showToast("Settings feature not yet ready");
                 break;
@@ -415,6 +693,30 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    public void noGPSCurrentLocation(){
+        EditText search = (EditText) findViewById(R.id.nearby_address_edit);
+        InputMethodManager imm = (InputMethodManager)getSystemService(
+                Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(search.getWindowToken(), 0);
+        String address = search.getText().toString();
+        Address realAddr;
+        try {
+            realAddr = new Geocoder(mainCon).getFromLocationName(address, 1).get(0);
+            destination = realAddr;
+            LatLng loc = new LatLng(realAddr.getLatitude(), realAddr.getLongitude());
+            //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15));
+            mMap.clear();
+            userMarker = mMap.addMarker(new MarkerOptions()
+                    .title("Your Location")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                    .snippet(address)
+                    .position(loc));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void goToAddress(View view){
         EditText search = (EditText) findViewById(R.id.geo_search_edit);
         InputMethodManager imm = (InputMethodManager)getSystemService(
@@ -426,8 +728,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             realAddr = new Geocoder(mainCon).getFromLocationName(address, 1).get(0);
             destination = realAddr;
             LatLng loc = new LatLng(realAddr.getLatitude(), realAddr.getLongitude());
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15));
+            //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15));
             mMap.clear();
+            if(userMarker != null){
+                mMap.addMarker(new MarkerOptions()
+                    .title(userMarker.getTitle())
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                    .snippet(userMarker.getSnippet())
+                    .position(userMarker.getPosition()));
+            }
             destMarker = mMap.addMarker(new MarkerOptions()
                     .title("Your Destination")
                     .snippet(address)
@@ -488,15 +797,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         protected void onPreExecute(){
             apiKey = getString(R.string.google_maps_key);
-            LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-            Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Location location = getBestLocation();
             userLoc = new LatLng(location.getLatitude(), location.getLongitude());
         }
 
         @Override
         protected String doInBackground(LatLng... params) {
             String baseUrl = "https://maps.googleapis.com/maps/api/directions/json?origin=";
-            baseUrl += userLoc.latitude + "," + userLoc.longitude + "&destination=" + params[0].latitude + "," + params[0].longitude + "&sensor=false";
+            if(userMarker != null){
+                baseUrl += userMarker.getPosition().latitude + "," + userMarker.getPosition().longitude + "&destination=" + params[0].latitude + "," + params[0].longitude + "&sensor=false";
+            }else{baseUrl += userLoc.latitude + "," + userLoc.longitude + "&destination=" + params[0].latitude + "," + params[0].longitude + "&sensor=false";}
             try{
                 URL url = new URL(baseUrl);
                 Log.v("Query", url.toString());

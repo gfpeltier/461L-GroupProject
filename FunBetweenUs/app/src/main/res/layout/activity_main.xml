@@ -29,6 +29,14 @@
                             android:layout_weight="1"
                             android:src="@drawable/menu_icon"
                             android:background="@drawable/button_selector"/>
+                        <ImageButton
+                            android:id="@+id/show_ui_button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_arrow_down"
+                            android:background="@android:color/transparent"
+                            android:layout_gravity="center"
+                            android:visibility="gone"/>
                         <!--<Spinner android:id="@+id/alone_or_friend_spinner"
                             android:gravity="center"
                             android:layout_width="0dp"
@@ -40,7 +48,8 @@
                             android:layout_width="wrap_content"
                             android:layout_weight="1"
                             android:textOff="Just Me!"
-                            android:textOn="Meet a Friend!"/>
+                            android:textOn="Meet a Friend!"
+                            android:onClick="onToggleClicked" />
                         <Spinner android:id="@+id/what_to_do_spinner"
                             android:gravity="center"
                             android:layout_height="50dp"
@@ -48,13 +57,38 @@
                             android:layout_weight="9" />
                     </LinearLayout>
                     <LinearLayout
+                        android:id="@+id/radius_group"
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:weightSum="6">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/radius_slider_label"/>
+                        <TextView
+                            android:id="@+id/radius_reading"
+                            android:layout_height="wrap_content"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"/>
+                        <SeekBar android:id="@+id/radius_slider"
+                            android:labelFor="@string/radius_slider_label"
+                            android:layout_width="0dp"
+                            android:layout_weight="4"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="15dp"
+                            android:layout_marginBottom="15dp"/>
+                    </LinearLayout>
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:id="@+id/user_search_area"
                         android:weightSum="5">
                         <AutoCompleteTextView android:id="@+id/geo_search_edit"
                             android:layout_height="50dp"
                             android:layout_width="0dp"
                             android:layout_weight="4"
+                            android:singleLine="true"
                             android:hint="@string/geo_search_hint"/>
                         <Button android:id="@+id/geo_search_button"
                             android:layout_width="0dp"
@@ -63,12 +97,6 @@
                             android:text="@string/geo_search_button_text"
                             android:onClick="goToAddress"/>
                     </LinearLayout>
-                    <SeekBar android:id="@+id/radius_slider"
-                        android:labelFor="@string/radius_slider_label"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="15dp"
-                        android:layout_marginBottom="15dp"/>
                 </LinearLayout>
                 <fragment xmlns:android="http://schemas.android.com/apk/res/android"
                     android:id="@+id/map"

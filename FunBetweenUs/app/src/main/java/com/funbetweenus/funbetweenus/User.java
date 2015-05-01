@@ -61,6 +61,10 @@ public class User implements Parcelable {
         }else{return "name null";}
     }
 
+    public String getId(){
+        return id;
+    }
+
     public String getEmail(){
         return email;
     }

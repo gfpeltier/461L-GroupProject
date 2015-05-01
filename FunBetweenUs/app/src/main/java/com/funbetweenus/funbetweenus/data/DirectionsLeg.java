@@ -51,4 +51,20 @@ public class DirectionsLeg {
     public void setSteps(ArrayList<DirectionsStep> steps) {
         this.steps = steps;
     }
+
+    public boolean equals(DirectionsLeg other){
+        if((this.steps.size() != other.getSteps().size()) || (this.distance != other.getDistance())){
+            return false;
+        }
+        Iterator<DirectionsStep> i = this.steps.iterator();
+        Iterator<DirectionsStep> j = other.getSteps().iterator();
+        while (i.hasNext()){
+            DirectionsStep iTmp = i.next();
+            DirectionsStep jTmp = j.next();
+            if(!iTmp.equals(jTmp)){
+                return false;
+            }
+        }
+        return true;
+    }
 }
