@@ -18,7 +18,7 @@ import java.util.Locale;
  */
 public class ActivitySearch implements ActivitySearchInterface{
 
-    private String apiKey = "AIzaSyAb8cOeH98byFxIRQDhKk0vnFpNCIxjaeE";
+    private String apiKey; // = "AIzaSyAb8cOeH98byFxIRQDhKk0vnFpNCIxjaeE";
     private RequestHandler requestHandler;
 
     public ActivitySearch(String apiKey, RequestHandler requestHandler){
@@ -26,11 +26,22 @@ public class ActivitySearch implements ActivitySearchInterface{
         this.requestHandler = requestHandler;
     }
 
-    public ActivitySearch(){
+    /**
+     * Creates a new ActivitySearch object using the specificed API key registered on the
+     * Google Developer Console
+     * @param apiKey
+     */
 
+    public ActivitySearch(String apiKey){
+        this(apiKey, new DefaultRequestHandler());
     }
 
-
+    /**
+     * Creates the url used to search for activities within a certain range and type
+     * @param params
+     * @param extraParams
+     * @return
+     */
     private static String url(String params, Param...  extraParams){
         String url = String.format(Locale.ENGLISH, "%s%s/json?%s", API_URL, "nearbysearch", params);
         //url = addExtraParams(url, extraParams);
@@ -38,7 +49,18 @@ public class ActivitySearch implements ActivitySearchInterface{
         return url;
     }
 
-    public static String parse(ActivitySearch client, List<Place> place, String str, int max) {
+    /**
+     * Parses the json String returned into a list of places
+     *
+     * @param place to parse into
+     * @param str raw json
+     * @param max the maximum amount of places to return
+     * @return list of parsed places
+     */
+
+    public static String parse(ActivitySearch client, List<Place> place, String str, int max,
+           String category) {
+
         JSONObject json = new JSONObject();
         try {
             //parse the json
@@ -52,7 +74,7 @@ public class ActivitySearch implements ActivitySearchInterface{
         }
 
         JSONArray results = json.getJSONArray("results");
-        parseResults(client, place, results, max);
+        parseResults(client, place, results, max, category);
         } catch (JSONException e){
             //debug
         }
@@ -61,7 +83,7 @@ public class ActivitySearch implements ActivitySearchInterface{
     }
 
     private static void parseResults(ActivitySearch client, List<Place> places, JSONArray results,
-        int max) throws JSONException {
+        int max, String category) throws JSONException {
         double lat = -1;
         double lon = -1;
         String placeId = null;
@@ -92,10 +114,12 @@ public class ActivitySearch implements ActivitySearchInterface{
                 //debug
             }
 
+            // Limit it to user's chosen category
             List<String> types = new ArrayList<>();
             JSONArray jsonTypes = result.optJSONArray("types");
             if (jsonTypes != null) {
                 for (int a = 0; a < jsonTypes.length(); a++){
+                    if( jsonTypes.getString(a).equals(category));
                     types.add(jsonTypes.getString(a));}
             }
 
@@ -105,29 +129,25 @@ public class ActivitySearch implements ActivitySearchInterface{
                     .setIconUrl(iconUrl).setAddress(address).addTypes(types).setJson(result));
         }
 
-    public void activitySearchMain(){         //ArrayList<String> locations) {
-       /* for(int i=0; i < locations.size(); i++){
-            String lat = locations.get(i);
-
-        }*/
-        double lat = 33.8650;
-        double lon = 151.2094;
-        getNearbyPlaces(lat, lon, 3.5, 1);
-    }
-
-    public List<Place> getNearbyPlaces (double lat, double lon, double radius, int max){
+    public List<Place> getNearbyPlaces (double lat, double lon, double radius, String category){
            List<Place> foundPlaces = null;
+        int max = 5;
+        if (category.equals("Gems")){
+            //do special look for Gems
+            return foundPlaces;
+        } else {
             String activityUrl = url(String.format(Locale.ENGLISH,
                     "key=%s&location=%f,%f&radius=%f", apiKey, lat, lon, radius));
-        try {
-            foundPlaces = getPlaces(activityUrl, max);
-        } catch (Exception e){
-            //debug
+            try {
+                foundPlaces = getPlaces(activityUrl, max, category);
+            } catch (Exception e) {
+                //debug
+            }
+            return foundPlaces;
         }
-        return foundPlaces;
     }
 
-    private List<Place> getPlaces(String activityUrl, int max) throws IOException {
+    private List<Place> getPlaces(String activityUrl, int max, String category) throws IOException {
         max = Math.min(max, MAXIMUM_RESULTS);
         int pages = (int) Math.ceil(max/(double) MAXIMUM_PAGE_RESULTS);
 
@@ -137,7 +157,7 @@ public class ActivitySearch implements ActivitySearchInterface{
             //debug("Page: " + (i + 1));
             String raw = requestHandler.get(activityUrl);
             //debug(raw);
-            String nextPage = parse(this, places, raw, max);
+            String nextPage = parse(this, places, raw, max, category);
             if (nextPage != null) {
                 max -= MAXIMUM_PAGE_RESULTS;
                 activityUrl = String.format("%s%s/json?pagetoken=%s&key=%s",
