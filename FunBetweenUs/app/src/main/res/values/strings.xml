@@ -20,6 +20,8 @@
     <string name="gem_title_hint">Title</string>
     <string name="gem_description_hint">Describe your gem!</string>
     <string name="gem_dialog_title">Tell us about your Gem!</string>
+    <string name="back_to_address_btn">Go Back</string>
+    <string name="find_activities_btn">Find the Fun!</string>
 
     <string-array name="alone_or_friend_array">
         <item>Just Me!</item>

@@ -8,102 +8,137 @@
             android:id="@+id/content_frame"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <LinearLayout
-                xmlns:tools="http://schemas.android.com/tools" android:id="@+id/container"
-                android:layout_width="match_parent" android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:background="#9EC301"
-                tools:context="com.funbetweenus.funbetweenus.MainActivity" tools:ignore="MergeRootFrame" >
 
-                <LinearLayout android:orientation="vertical"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:weightSum="11">
-                        <ImageButton
-                            android:id="@+id/menu_button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:src="@drawable/menu_icon"
-                            android:background="@drawable/button_selector"/>
-                        <ImageButton
-                            android:id="@+id/show_ui_button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/ic_arrow_down"
-                            android:background="@android:color/transparent"
-                            android:layout_gravity="center"
-                            android:visibility="gone"/>
-                        <!--<Spinner android:id="@+id/alone_or_friend_spinner"
-                            android:gravity="center"
-                            android:layout_width="0dp"
-                            android:layout_height="50dp"
-                            android:layout_weight="5"/> -->
-                        <ToggleButton
-                            android:id="@+id/user_mode_switch"
-                            android:layout_height="wrap_content"
-                            android:layout_width="wrap_content"
-                            android:layout_weight="1"
-                            android:textOff="Just Me!"
-                            android:textOn="Meet a Friend!"
-                            android:onClick="onToggleClicked" />
-                        <Spinner android:id="@+id/what_to_do_spinner"
-                            android:gravity="center"
-                            android:layout_height="50dp"
-                            android:layout_width="0dp"
-                            android:layout_weight="9" />
-                    </LinearLayout>
-                    <LinearLayout
-                        android:id="@+id/radius_group"
-                        android:layout_height="wrap_content"
-                        android:layout_width="match_parent"
-                        android:weightSum="6">
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/radius_slider_label"/>
-                        <TextView
-                            android:id="@+id/radius_reading"
-                            android:layout_height="wrap_content"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"/>
-                        <SeekBar android:id="@+id/radius_slider"
-                            android:labelFor="@string/radius_slider_label"
-                            android:layout_width="0dp"
-                            android:layout_weight="4"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="15dp"
-                            android:layout_marginBottom="15dp"/>
-                    </LinearLayout>
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/user_search_area"
-                        android:weightSum="5">
-                        <AutoCompleteTextView android:id="@+id/geo_search_edit"
-                            android:layout_height="50dp"
-                            android:layout_width="0dp"
-                            android:layout_weight="4"
-                            android:singleLine="true"
-                            android:hint="@string/geo_search_hint"/>
-                        <Button android:id="@+id/geo_search_button"
-                            android:layout_width="0dp"
-                            android:layout_height="50dp"
-                            android:layout_weight="1"
-                            android:text="@string/geo_search_button_text"
-                            android:onClick="goToAddress"/>
-                    </LinearLayout>
-                </LinearLayout>
                 <fragment xmlns:android="http://schemas.android.com/apk/res/android"
                     android:id="@+id/map"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:name="com.google.android.gms.maps.MapFragment"/>
-            </LinearLayout>
+                    android:name="com.google.android.gms.maps.MapFragment">
+                    <LinearLayout
+                        xmlns:tools="http://schemas.android.com/tools" android:id="@+id/container"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="#CC9EC301"
+                        tools:context="com.funbetweenus.funbetweenus.MainActivity" tools:ignore="MergeRootFrame" >
+
+                    <LinearLayout android:orientation="vertical"
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:weightSum="11">
+                            <ImageButton
+                                android:id="@+id/menu_button"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:src="@drawable/menu_icon"
+                                android:background="@drawable/button_selector"/>
+                            <ImageButton
+                                android:id="@+id/show_ui_button"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_arrow_down"
+                                android:background="@android:color/transparent"
+                                android:layout_gravity="center"
+                                android:visibility="gone"/>
+                            <!--<Spinner android:id="@+id/alone_or_friend_spinner"
+                                android:gravity="center"
+                                android:layout_width="0dp"
+                                android:layout_height="50dp"
+                                android:layout_weight="5"/> -->
+                            <ToggleButton
+                                android:id="@+id/user_mode_switch"
+                                android:layout_height="wrap_content"
+                                android:layout_width="wrap_content"
+                                android:layout_weight="1"
+                                android:textOff="Just Me!"
+                                android:textOn="Meet a Friend!"
+                                android:onClick="onToggleClicked" />
+                            <Spinner android:id="@+id/what_to_do_spinner"
+                                android:gravity="center"
+                                android:layout_height="50dp"
+                                android:layout_width="0dp"
+                                android:layout_weight="9" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:id="@+id/radius_group"
+                            android:orientation="vertical"
+                            android:layout_height="wrap_content"
+                            android:layout_width="match_parent"
+                            android:visibility="gone">
+                            <LinearLayout
+                                android:id="@+id/radius_group_label"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:weightSum="2">
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="center_vertical|center_horizontal"
+                                    android:textSize="20dp"
+                                    android:text="@string/radius_slider_label"/>
+                                <TextView
+                                    android:id="@+id/radius_reading"
+                                    android:layout_height="wrap_content"
+                                    android:layout_width="0dp"
+                                    android:gravity="center_vertical|center_horizontal"
+                                    android:textSize="20dp"
+                                    android:layout_weight="1"/>
+                            </LinearLayout>
+
+                            <SeekBar android:id="@+id/radius_slider"
+                                android:labelFor="@string/radius_slider_label"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="15dp"
+                                android:layout_marginBottom="15dp"/>
+                            <LinearLayout
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:weightSum="2">
+                                <Button
+                                    android:id="@+id/back_to_address_btn"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="center_vertical|center_horizontal"
+                                    android:text="@string/back_to_address_btn"
+                                    android:onClick="backToAddressEnter"/>
+                                <Button
+                                    android:id="@+id/find_activities_btn"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="center_vertical|center_horizontal"
+                                    android:text="@string/find_activities_btn"/>
+                            </LinearLayout>
+
+                        </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/user_search_area"
+                            android:weightSum="5">
+                            <AutoCompleteTextView android:id="@+id/geo_search_edit"
+                                android:layout_height="50dp"
+                                android:layout_width="0dp"
+                                android:layout_weight="4"
+                                android:singleLine="true"
+                                android:hint="@string/geo_search_hint"/>
+                            <Button android:id="@+id/geo_search_button"
+                                android:layout_width="0dp"
+                                android:layout_height="50dp"
+                                android:layout_weight="1"
+                                android:text="@string/geo_search_button_text"
+                                android:onClick="goToAddress"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                    </LinearLayout>
+                </fragment>
+
 
 
         </FrameLayout>

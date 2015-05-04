@@ -53,7 +53,7 @@ public class TitleActivity extends ActionBarActivity implements OnTaskCompleted 
         }catch (Exception e){
             e.printStackTrace();
         }
-        if(code.equals("success")){                           //Needed to move this block out of background thread
+        if(code != null && code.equals("success")){                           //Needed to move this block out of background thread
             User currentUser = null;
             assert userObject != null;
             try {

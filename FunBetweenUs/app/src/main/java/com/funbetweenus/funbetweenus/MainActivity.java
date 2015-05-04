@@ -91,6 +91,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int MESSAGE_TEXT_CHANGED = 0;
     private static final int AUTOCOMPLETE_DELAY = 500;
     private static final int THRESHOLD = 3;
+    private static final int METERSINMILE = 1609;
 
     private List<Address> autoCompleteSuggestionAddresses;
     private ArrayAdapter<String> autoCompleteAdapter;
@@ -174,8 +175,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         locationInput.setOnItemSelectedListener(this);
         locationInput.setThreshold(THRESHOLD);
 
-        setSearchBounds(1, 5);         //Initialize search bounds 1-5 miles
-        setSliderReading();
 
     }
 
@@ -227,6 +226,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+
+    /**
+     *
+     * OnClick Methods
+     */
+
+    public void backToAddressEnter(View view){
+        findRadiusViewState(false);
+    }
 
     public void onToggleClicked(View view){
         boolean on = ((ToggleButton) view).isChecked();
@@ -295,6 +303,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         findViewById(R.id.radius_group).setVisibility(showUI ? View.VISIBLE:View.GONE);
     }
 
+    private void findRadiusViewState(boolean radiusUI){
+        findViewById(R.id.user_search_area).setVisibility(radiusUI ? View.GONE:View.VISIBLE);
+        findViewById(R.id.radius_group).setVisibility(radiusUI ? View.VISIBLE:View.GONE);
+        if(radiusUI){
+            mMap.setPadding(0,600,0,0);
+            int mileDistance = routesToDestination.get(0).getDistance() / METERSINMILE;
+            int minRadius = mileDistance/11;
+            //Log.e("PATH DISTANCE", ""+routesToDestination.get(0).getDistance());
+            int maxRadius;
+            if(minRadius == 0){
+                minRadius = 1;
+                maxRadius = 5;
+            }else{maxRadius = minRadius+5;}
+            setSearchBounds(minRadius, maxRadius);
+            setSliderReading();
+        }else{mMap.setPadding(0,300,0,0);}
+    }
+
     public void drawDirectionsPath(){
 
         if(directionsPathPoints != null && !directionsPathPoints.isEmpty()){
@@ -306,7 +332,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             pathOptions.color(Color.BLUE);
             fullPath = mMap.addPolyline(pathOptions);
             viewPathState = true;
-            updateViewState(false);
+            findRadiusViewState(true);
+            //updateViewState(false);
             fixZoomOverPath();
         }else{showToast("An error has occurred and we cannot display directions");}
         /*if(routesToDestination != null && !routesToDestination.isEmpty()){
@@ -561,7 +588,29 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         if (!gemTitle.equals(null) && !gemDescription.equals(null) && !gemTitle.equals("") && !gemDescription.equals("")) {
                             gem.setTitle(gemTitle);
                             gem.setDescription(gemDescription);
-                            new SubmitGemTask().execute(gem);
+                            SubmitGemTask subGem = new SubmitGemTask(getApplicationContext());
+                            subGem.execute(gem);
+                            subGem.setMyTaskCompleteListener(new SubmitGemTask.OnTaskComplete() {
+
+                                @Override
+                                public void setMyTaskComplete(String JsonMsg) {
+                                    JSONObject rootOfResult = null;
+                                    String status = "";
+                                    String result = "";
+                                    try{
+                                        rootOfResult = new JSONObject(JsonMsg);
+                                        status = (String) rootOfResult.get("code");
+                                        result = (String) rootOfResult.get("result");
+                                    }catch(Exception e){
+                                        e.printStackTrace();
+                                    }
+                                    if(status.equals("success")){
+                                        showToast("Gem added successfully!");
+                                    }else{
+                                        showToast("Uh Oh... An error has occurred. We are unable to add your gem right now.");
+                                    }
+                                }
+                            });
                             Log.e("GEM_TITLE", gemTitle);
                             Log.e("GEM_DESCRIPTION", gemDescription);
                             marker.setTitle(gem.getTitle());
@@ -587,6 +636,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
+        mMap.setPadding(0, 300, 0 ,0);          //Allow 300 dps initial padding to still use "My Location" button
         LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         boolean isGPSEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         boolean isNetworkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
@@ -721,6 +771,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         try {
             realAddr = new Geocoder(mainCon).getFromLocationName(address, 1).get(0);
             destination = realAddr;
+            Log.e("RETURNED ADDRESS", ""+destination.toString());
             LatLng loc = new LatLng(realAddr.getLatitude(), realAddr.getLongitude());
             //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15));
             mMap.clear();
@@ -766,16 +817,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         protected void onPostExecute(List<Address> addresses){
             synchronized (this){
-                ArrayList<String> addrStr = new ArrayList<String>();
-                for(int i = 0; i < autoCompleteSuggestionAddresses.size(); i++){
-                    Address address = autoCompleteSuggestionAddresses.get(i);
-                    String addr = getFormattedAddress(address);
-                    addrStr.add(addr);
+                if(autoCompleteSuggestionAddresses != null){
+                    ArrayList<String> addrStr = new ArrayList<String>();
+                    for(int i = 0; i < autoCompleteSuggestionAddresses.size(); i++){
+                        Address address = autoCompleteSuggestionAddresses.get(i);
+                        String addr = getFormattedAddress(address);
+                        addrStr.add(addr);
+                    }
+                    autoCompleteAdapter = new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_dropdown_item_1line, addrStr);
+                    locationInput.setAdapter(autoCompleteAdapter);
                 }
-                autoCompleteAdapter = new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_dropdown_item_1line, addrStr);
-                locationInput.setAdapter(autoCompleteAdapter);
             }
-
         }
     }
 
