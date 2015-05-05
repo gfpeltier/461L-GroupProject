@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename compilation unit &apos;Socket.ServerSocket.java&apos; to &apos;SmackCcsClient.java&apos;&#x0A;- Original project: &apos;SmackServerSocket&apos;&#x0A;- Original element: &apos;Socket.ServerSocket.java&apos;&#x0A;- Renamed element: &apos;Socket.SmackCcsClient.java&apos;" description="Rename compilation unit &apos;ServerSocket.java&apos;" flags="2" id="org.eclipse.jdt.ui.rename.compilationunit" input="/src&lt;Socket{ServerSocket.java" name="SmackCcsClient.java" references="false" stamp="1430760736391" version="1.0"/>
+</session>

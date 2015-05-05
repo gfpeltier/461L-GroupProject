@@ -150,7 +150,7 @@
             android:layout_width="300dp"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:background="#111">
+            android:background="#cc111111">
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -166,7 +166,7 @@
                     android:choiceMode="singleChoice"
                     android:divider="@android:color/transparent"
                     android:dividerHeight="0dp"
-                    android:background="#111"
+                    android:background="#cc111111"
                     android:layout_below="@id/nav_bar_greet"/>
             </RelativeLayout>
 

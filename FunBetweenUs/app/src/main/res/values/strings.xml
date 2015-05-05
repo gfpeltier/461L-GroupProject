@@ -43,4 +43,10 @@
         <item >Sign Out</item>
         <item >Settings</item>
     </string-array>
+
+    <array name="nav_drawer_icons">
+        <item>@drawable/ic_gem</item>
+        <item>@drawable/ic_logout</item>
+        <item>@drawable/ic_settings</item>
+    </array>
 </resources>

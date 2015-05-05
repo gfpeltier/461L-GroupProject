@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename type &apos;SimpleSocket.ServerSocket&apos; to &apos;SimpleServerSocket&apos;&#x0A;- Original project: &apos;SimpleServerSocket&apos;&#x0A;- Original element: &apos;SimpleSocket.ServerSocket&apos;&#x0A;- Renamed element: &apos;SimpleSocket.SimpleServerSocket&apos;&#x0A;- Update references to refactored element&#x0A;- Update textual occurrences in comments and strings" description="Rename type &apos;ServerSocket&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.type" input="/src&lt;SimpleSocket{ServerSocket.java[ServerSocket" matchStrategy="1" name="SimpleServerSocket" qualified="false" references="true" similarDeclarations="false" stamp="1430770076410" textual="false" version="1.0"/>
+</session>
