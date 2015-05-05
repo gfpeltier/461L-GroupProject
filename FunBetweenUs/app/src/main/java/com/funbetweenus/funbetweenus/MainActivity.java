@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,8 +36,10 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -430,6 +433,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         findRadiusViewState(false);
     }
 
+    public void backToChooseRadius(View view) { showScrollUI(false); }
+
     public void onToggleClicked(View view){
         boolean on = ((ToggleButton) view).isChecked();
         Log.e("ToggleMode","Toggling user mode");
@@ -513,7 +518,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 showToast("This category is not yet supported");
                 break;
         }
-        displayPlaces();
     }
 
 
@@ -552,12 +556,63 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 e.printStackTrace();
             }
         }
+        populatePlacesScrollView();
     }
 
-    private void displayPlaces(){
 
-
+    private void populatePlacesScrollView(){
+        ScrollView sv = (ScrollView) findViewById(R.id.place_scroll_view);
+        sv.removeAllViews();
+        LinearLayout ll = new LinearLayout(this);
+        ll.setOrientation(LinearLayout.VERTICAL);
+        Iterator<Place> i = placeResults.iterator();
+        while(i.hasNext()){
+            Place current = i.next();
+            LinearLayout ill = new LinearLayout(this);
+            ill.setBackground(getResources().getDrawable(R.drawable.scroll_back));
+            ill.setWeightSum(2);
+            TextView tv = new TextView(this);
+            TextView tv2 = new TextView(this);
+            tv.setText(current.getName());
+            tv.setTextSize(22);
+            tv.setGravity(Gravity.CENTER);
+            tv.setPadding(15, 0, 25, 0);
+            tv.setLayoutParams(new TableLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            tv2.setText(current.getVicinity());
+            tv2.setTextSize(18);
+            tv2.setGravity(Gravity.CENTER);
+            tv2.setPadding(0, 0, 0, 15);
+            tv2.setLayoutParams(new TableLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            ill.addView(tv);
+            ill.addView(tv2);
+            ill.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //TODO: Need to figure out how to link the object to this listener. Highlight marker, get picture, and do other necessary things
+                }
+            });
+            ll.addView(ill);
+        }
+        sv.addView(ll);
+        showScrollUI(true);
     }
+
+    private void showScrollUI(boolean showScroll){
+        findViewById(R.id.user_mode_switch).setVisibility(showScroll ? View.GONE:View.VISIBLE);
+        findViewById(R.id.what_to_do_spinner).setVisibility(showScroll ? View.GONE:View.VISIBLE);
+        findViewById(R.id.radius_group).setVisibility(showScroll ? View.GONE:View.VISIBLE);
+
+        findViewById(R.id.place_scroll_view).setVisibility(showScroll ? View.VISIBLE:View.GONE);
+        findViewById(R.id.back_to_radius_button).setVisibility(showScroll ? View.VISIBLE:View.GONE);
+
+        //TODO: Dynamically change padding for the map to account for changes
+
+        if(showScroll){
+            mMap.setPadding(0,120,0,200);
+        }else{mMap.setPadding(0,600,0,0);}
+        fixZoomOverPath();
+    }
+
 
     public void initializeSpinners(){
         /*Spinner spinner = (Spinner) findViewById(R.id.alone_or_friend_spinner);
@@ -584,7 +639,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bc.build(), 50));
     }
 
-    private void updateViewState(boolean showUI){
+    /*private void updateViewState(boolean showUI){
         if(!showUI){
 
             ImageButton arrowDown = (ImageButton) findViewById(R.id.show_ui_button);
@@ -601,7 +656,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         findViewById(R.id.what_to_do_spinner).setVisibility(showUI ? View.VISIBLE:View.GONE);
         findViewById(R.id.user_search_area).setVisibility(showUI ? View.VISIBLE:View.GONE);
         findViewById(R.id.radius_group).setVisibility(showUI ? View.VISIBLE : View.GONE);
-    }
+    }*/
 
     private void findRadiusViewState(boolean radiusUI){
         findViewById(R.id.user_search_area).setVisibility(radiusUI ? View.GONE:View.VISIBLE);
@@ -1072,6 +1127,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(search.getWindowToken(), 0);
         String address = search.getText().toString();
+        if(address.equals(null) || address.equals("")){
+            showToast("Please enter an address first!");
+            return;
+        }
         Address realAddr;
         try {
             realAddr = new Geocoder(mainCon).getFromLocationName(address, 1).get(0);

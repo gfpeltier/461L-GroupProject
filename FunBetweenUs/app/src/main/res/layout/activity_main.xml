@@ -35,13 +35,13 @@
                                 android:layout_weight="1"
                                 android:src="@drawable/menu_icon"
                                 android:background="@drawable/button_selector"/>
-                            <ImageButton
-                                android:id="@+id/show_ui_button"
+                            <Button
+                                android:id="@+id/back_to_radius_button"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:src="@drawable/ic_arrow_down"
-                                android:background="@android:color/transparent"
-                                android:layout_gravity="center"
+                                android:layout_gravity="right"
+                                android:text="@string/back_to_address_btn"
+                                android:onClick="backToChooseRadius"
                                 android:visibility="gone"/>
                             <!--<Spinner android:id="@+id/alone_or_friend_spinner"
                                 android:gravity="center"
@@ -116,7 +116,6 @@
                                     android:onClick="findFunListener"
                                     android:text="@string/find_activities_btn"/>
                             </LinearLayout>
-
                         </LinearLayout>
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -138,6 +137,15 @@
                         </LinearLayout>
                     </LinearLayout>
                     </LinearLayout>
+                    <ScrollView
+                        android:id="@+id/place_scroll_view"
+                        android:layout_height="200dp"
+                        android:background="#CC9EC301"
+                        android:layout_width="fill_parent"
+                        android:layout_gravity="bottom"
+                        android:visibility="gone"
+                        android:clickable="true">
+                    </ScrollView>
                 </fragment>
 
 
