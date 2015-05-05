@@ -43,8 +43,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-
-import com.funbetweenus.funbetweenus.activityFind.ActivitySearch;
+<<<<<<< HEAD
 import com.funbetweenus.funbetweenus.data.Directions;
 import com.funbetweenus.funbetweenus.data.DirectionsLeg;
 import com.funbetweenus.funbetweenus.data.DirectionsRoute;
@@ -53,6 +52,10 @@ import com.funbetweenus.funbetweenus.data.DirectionsStep;
 import com.funbetweenus.funbetweenus.data.Gem;
 import com.funbetweenus.funbetweenus.utils.PointsAlgorithm;
 import com.funbetweenus.funbetweenus.utils.SubmitGemTask;
+=======
+import com.funbetweenus.funbetweenus.activityFind.ActivitySearch;
+import com.funbetweenus.funbetweenus.activityFind.RequestHandler;
+>>>>>>> activity-search
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -81,9 +84,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+<<<<<<< HEAD
 import static com.funbetweenus.funbetweenus.R.id.nearby_address_search_btn;
-import static com.funbetweenus.funbetweenus.R.id.radius_reading;
-import static com.funbetweenus.funbetweenus.R.id.what_to_do_spinner;
+=======
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
+>>>>>>> activity-search
 
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, TextWatcher, AdapterView.OnItemSelectedListener {
@@ -131,7 +140,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i("CURRENT USER NAME", user.getName());
             greet += user.getName();
             //setTitle(greet);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -140,8 +149,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
         String[] mDrawerOptions = getResources().getStringArray(R.array.nav_drawer_items);
 
-        if(user != null){
-            TextView txt = (TextView)findViewById(R.id.nav_bar_greet);
+        if (user != null) {
+            TextView txt = (TextView) findViewById(R.id.nav_bar_greet);
             txt.setText(greet);
         }
 
@@ -160,18 +169,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 Log.e("CLICK MENU", "MENU BUTTON CLICKED!!!!");
-                if(!mDrawerLayout.isDrawerOpen(mDrawerFrame)){
+                if (!mDrawerLayout.isDrawerOpen(mDrawerFrame)) {
                     Log.e("Drawer Status", "Closed!");
                     mDrawerLayout.openDrawer(mDrawerFrame);
-                    if(mDrawerLayout.isDrawerVisible(mDrawerFrame)){
-                        Log.e("Drawer Vis","Drawer Now OPEN AND VISIBLE");
-                    }else{Log.e("Drawer Vis","Drawer Now OPEN AND NOT VISIBLE");}
-                }else{
+                    if (mDrawerLayout.isDrawerVisible(mDrawerFrame)) {
+                        Log.e("Drawer Vis", "Drawer Now OPEN AND VISIBLE");
+                    } else {
+                        Log.e("Drawer Vis", "Drawer Now OPEN AND NOT VISIBLE");
+                    }
+                } else {
                     Log.e("Drawer Status", "Open!");
-                    mDrawerLayout.closeDrawer(mDrawerFrame);}
+                    mDrawerLayout.closeDrawer(mDrawerFrame);
+                }
 
             }
         });
+<<<<<<< HEAD
 
 
         mainCon = getBaseContext();
@@ -189,6 +202,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void setSearchBounds(int low, int high){
         lowLimitSearchRadius = low;
         highLimitSearchRadius = high;
+=======
+        ActivitySearch search = new ActivitySearch();
+        search.activitySearchMain();
+>>>>>>> activity-search
     }
 
     private double evaluateRealRadius(int progress){
@@ -257,17 +274,30 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+<<<<<<< HEAD
     public void initializeSpinners(){
         /*Spinner spinner = (Spinner) findViewById(R.id.alone_or_friend_spinner);
             // Create an ArrayAdapter using the string array and a default spinner layout
+=======
+    public void initializeSpinners() {
+        Spinner spinner = (Spinner) findViewById(R.id.alone_or_friend_spinner);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+>>>>>>> activity-search
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.alone_or_friend_array, android.R.layout.simple_spinner_item);
-            // Specify the layout to use when the list of choices appears
+        // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+<<<<<<< HEAD
             // Apply the adapter to the spinner
         spinner.setAdapter(adapter);*/
         Spinner spinner = (Spinner) findViewById(R.id.what_to_do_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+=======
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+        spinner = (Spinner) findViewById(R.id.what_to_do_spinner);
+        adapter = ArrayAdapter.createFromResource(this,
+>>>>>>> activity-search
                 R.array.what_to_do_array, android.R.layout.simple_spinner_item);
         spinner.setAdapter(adapter);
     }
@@ -421,14 +451,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 ArrayList<LatLng> points = null;
                 PointsAlgorithm pointsGetter = new PointsAlgorithm();
                 points.addAll(pointsGetter.getPoints(routesToDestination.get(0)));
-                ActivitySearch actSearch = new ActivitySearch((R.string.google_maps_key + ""));
-                double lat1;
-                double lon1;
-                for(int x = 0; x<points.size(); x++){
-                    lat1 = points.get(x).latitude;
-                    lon1 = points.get(x).longitude;
-                    actSearch.getNearbyPlaces(lat1,lon1,(radius_reading),(what_to_do_spinner+""));
-                }
+                Log.e("points", points.toString());
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -603,6 +626,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapReady(GoogleMap map) {
+<<<<<<< HEAD
         mMap = map;
         LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         boolean isGPSEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -626,10 +650,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }else{return;}
             }
         });
+=======
+     /*   mMap = map;
+       LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Log.e("Location", location.toString());
+        LatLng userLoc = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.setMyLocationEnabled(true);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLoc, 13));*/
+>>>>>>> activity-search
     }
 
-    private void selectItem(int pos){
+    private void selectItem(int pos) {
         Log.e("NavTableSelect", "" + pos);
+<<<<<<< HEAD
         switch (pos){
             case 0:                 // Add Gem
                 Log.e("NavTable", "Attempt to add Gem to map");
@@ -638,9 +672,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 showToast("Tap on the map where you would like to place a Gem!");
                 break;
             case 1:                 // Sign Out
+=======
+        switch (pos) {
+            case 0:                 // Sign Out
+>>>>>>> activity-search
                 Log.e("NavTable", "Sign Out attempted");
                 Intent logoutIntent = new Intent(MainActivity.this, LoginActivity.class);
-                logoutIntent.putExtra("fromMain",true);
+                logoutIntent.putExtra("fromMain", true);
                 startActivity(logoutIntent);
                 break;
             case 2:                 // Settings
@@ -652,9 +690,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-
-
-    public void showToast(String msg){
+    public void showToast(String msg) {
         Context context = getApplicationContext();
         Toast toast = Toast.makeText(context, msg, Toast.LENGTH_SHORT);
         toast.show();
@@ -759,8 +795,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-
-    private class DrawerItemClickListener implements ListView.OnItemClickListener{
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -768,6 +803,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+<<<<<<< HEAD
     private class GeocodeTask extends AsyncTask<String, Void, List<Address>>{
 
         @Override
@@ -861,6 +897,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
+=======
+>>>>>>> activity-search
 }
 
 
