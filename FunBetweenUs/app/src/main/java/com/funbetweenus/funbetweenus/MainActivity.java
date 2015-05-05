@@ -11,15 +11,10 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.location.Address;
-import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
-import android.media.Image;
 import android.os.AsyncTask;
-import android.os.Looper;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.os.Bundle;
@@ -30,7 +25,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -48,14 +42,14 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 
-import com.funbetweenus.funbetweenus.activityFind.ActivitySearch;
-import com.funbetweenus.funbetweenus.data.Directions;
 import com.funbetweenus.funbetweenus.data.DirectionsLeg;
 import com.funbetweenus.funbetweenus.data.DirectionsRoute;
 import com.funbetweenus.funbetweenus.data.DirectionsStep;
 
 import com.funbetweenus.funbetweenus.data.Gem;
+import com.funbetweenus.funbetweenus.data.Place;
 import com.funbetweenus.funbetweenus.utils.PointsAlgorithm;
+import com.funbetweenus.funbetweenus.utils.RetrievePlacesDataTask;
 import com.funbetweenus.funbetweenus.utils.SubmitGemTask;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -90,8 +84,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.funbetweenus.funbetweenus.R.id.nearby_address_search_btn;
-import static com.funbetweenus.funbetweenus.R.id.radius_reading;
-import static com.funbetweenus.funbetweenus.R.id.what_to_do_spinner;
 
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, TextWatcher, AdapterView.OnItemSelectedListener {
@@ -105,7 +97,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int MESSAGE_TEXT_CHANGED = 0;
     private static final int AUTOCOMPLETE_DELAY = 500;
     private static final int THRESHOLD = 3;
-    private static final int METERSINMILE = 1609;
+    private static final double METERSINMILE = 1609.0;
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final String PROPERTY_REG_ID = "registration_id";
     private static final String PROPERTY_APP_VERSION = "appVersion";
@@ -126,11 +118,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean placeGem;
 
     private ArrayList<DirectionsRoute> routesToDestination;
+    private ArrayList<Place> placeResults;
     private List<LatLng> directionsPathPoints;
     private Polyline fullPath;
     private boolean viewPathState;
-    private int lowLimitSearchRadius;
-    private int highLimitSearchRadius;
+    private double lowLimitSearchRadius;
+    private double highLimitSearchRadius;
 
 
     GoogleCloudMessaging gcm;
@@ -138,7 +131,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     AtomicInteger mdgId = new AtomicInteger();
     TextView mDisplay;
 
-    private Context mainCon;
+    protected Context mainCon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,6 +141,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         initializeSpinners();
+
+        mainCon = getBaseContext();
 
         // Check device for Play Services APK. If check succeeds, proceed with
         //  GCM registration.
@@ -211,7 +206,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
 
-        mainCon = getBaseContext();
+
         locationInput = (AutoCompleteTextView) findViewById(R.id.geo_search_edit);
         locationInput.addTextChangedListener(this);
         locationInput.setOnItemSelectedListener(this);
@@ -289,8 +284,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
      */
     private static int getAppVersion(Context context) {
         try {
+            Log.e("AppVersion", ""+context.toString());
             PackageInfo packageInfo = context.getPackageManager()
                     .getPackageInfo(context.getPackageName(), 0);
+            Log.e("PackInfo", ""+packageInfo.toString());
             return packageInfo.versionCode;
         } catch (PackageManager.NameNotFoundException e) {
             // should never happen
@@ -341,7 +338,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             protected void onPostExecute(String msg) {
-                mDisplay.append(msg + "\n");
+                //mDisplay.append(msg + "\n");
+
             }
 
         }.execute(null, null, null);
@@ -375,13 +373,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private void setSearchBounds(int low, int high){
+    private void setSearchBounds(double low, double high){
         lowLimitSearchRadius = low;
         highLimitSearchRadius = high;
     }
 
     private double evaluateRealRadius(int progress){
-        int constant = lowLimitSearchRadius;
+        double constant = lowLimitSearchRadius;
         double increment = ((highLimitSearchRadius - lowLimitSearchRadius) / 100.0);
         return (progress * increment) + constant;
     }
@@ -455,6 +453,112 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
+    public void findFunListener(View view){
+        ArrayList<LatLng> queryPoints = new PointsAlgorithm().getPoints(routesToDestination.get(0));
+        SeekBar radiusSlider = (SeekBar) findViewById(R.id.radius_slider);
+        double radius = (int) Math.round(evaluateRealRadius(radiusSlider.getProgress()) * METERSINMILE);
+        Spinner categorySpinner = (Spinner) findViewById(R.id.what_to_do_spinner);
+        String category = categorySpinner.getSelectedItem().toString();
+        RetrievePlacesDataTask search = new RetrievePlacesDataTask(this,getString(R.string.google_places_key), queryPoints);
+        Iterator<LatLng> i = queryPoints.iterator();
+        switch(category){
+            case "Restaurants":
+                search.execute(String.valueOf(radius), "restaurant");
+                search.setMyTaskCompleteListener(new RetrievePlacesDataTask.OnTaskComplete(){
+
+                    @Override
+                    public void setMyTaskComplete(ArrayList<String> json) {
+                        parsePlaceJSON(json);
+                    }
+                });
+                break;
+            case "Bars":
+                search.execute(String.valueOf(radius), "bar");
+                search.setMyTaskCompleteListener(new RetrievePlacesDataTask.OnTaskComplete() {
+
+                    @Override
+                    public void setMyTaskComplete(ArrayList<String> json) {
+                        parsePlaceJSON(json);
+                    }
+                });
+                break;
+            case "Cafes":
+                search.execute(String.valueOf(radius), "cafe");
+                search.setMyTaskCompleteListener(new RetrievePlacesDataTask.OnTaskComplete() {
+
+                    @Override
+                    public void setMyTaskComplete(ArrayList<String> json) {
+                        parsePlaceJSON(json);
+                    }
+                });
+                break;
+            case "Wellness":
+                search.execute(String.valueOf(radius), "health");
+                search.setMyTaskCompleteListener(new RetrievePlacesDataTask.OnTaskComplete() {
+
+                    @Override
+                    public void setMyTaskComplete(ArrayList<String> json) {
+                        parsePlaceJSON(json);
+                    }
+                });
+                break;
+            case "Gems":
+                while (i.hasNext()){
+                    LatLng next = i.next();
+                    //TODO: Need to implement something else for gems
+                }
+                break;
+            case "Out N About":
+                showToast("This category is not yet supported");
+                break;
+        }
+        displayPlaces();
+    }
+
+
+    private void parsePlaceJSON(ArrayList<String> results){
+        Iterator<String> i = results.iterator();
+        placeResults = new ArrayList<Place>();
+        while(i.hasNext()){
+            String queryResultStr = i.next();
+            try {
+                JSONObject queryResult = new JSONObject(queryResultStr);
+                JSONArray jsonResults = (JSONArray) queryResult.get("results");
+                for(int k = 0; k < jsonResults.length(); k++){
+                    JSONObject jsonResult = jsonResults.getJSONObject(k);
+                    JSONObject geo = jsonResult.getJSONObject("geometry");
+                    JSONObject loc = geo.getJSONObject("location");
+                    LatLng latLng = new LatLng(Double.parseDouble(loc.getString("lat")),Double.parseDouble(loc.getString("lng")));
+                    String name = jsonResult.getString("name");
+                    String id = jsonResult.getString("id");
+                    JSONArray photoArr = jsonResult.getJSONArray("photos");
+                    JSONObject photoObj = photoArr.getJSONObject(0);
+                    String photo = photoObj.getString("photo_reference");
+                    String vicinity = jsonResult.getString("vicinity");
+                    Place newPlace = new Place(latLng, name, id, photo, vicinity);
+                    Log.e("GeneratedPlace", newPlace.toString());
+                    if(!placeResults.contains(newPlace)){
+                        Marker mark = mMap.addMarker(new MarkerOptions()
+                            .title(newPlace.getName())
+                            .snippet(newPlace.getVicinity())
+                            .position(newPlace.getLocation()));
+                        newPlace.setMarker(mark);
+                        placeResults.add(newPlace);
+                    }
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void displayPlaces(){
+
+
+    }
+
     public void initializeSpinners(){
         /*Spinner spinner = (Spinner) findViewById(R.id.alone_or_friend_spinner);
             // Create an ArrayAdapter using the string array and a default spinner layout
@@ -496,7 +600,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         findViewById(R.id.user_mode_switch).setVisibility(showUI ? View.VISIBLE:View.GONE);
         findViewById(R.id.what_to_do_spinner).setVisibility(showUI ? View.VISIBLE:View.GONE);
         findViewById(R.id.user_search_area).setVisibility(showUI ? View.VISIBLE:View.GONE);
-        findViewById(R.id.radius_group).setVisibility(showUI ? View.VISIBLE:View.GONE);
+        findViewById(R.id.radius_group).setVisibility(showUI ? View.VISIBLE : View.GONE);
     }
 
     private void findRadiusViewState(boolean radiusUI){
@@ -507,13 +611,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if(radiusUI){
 
             mMap.setPadding(0,600,0,0);
-            int mileDistance = routesToDestination.get(0).getDistance() / METERSINMILE;
-            int minRadius = mileDistance/11;
+            double mileDistance = routesToDestination.get(0).getDistance() / METERSINMILE;
+            double minRadius = mileDistance/12.0;
             //Log.e("PATH DISTANCE", ""+routesToDestination.get(0).getDistance());
-            int maxRadius;
+            double maxRadius;
             if(minRadius == 0){
-                minRadius = 1;
-                maxRadius = 5;
+                minRadius = .1;
+                maxRadius = 2;
             }else{maxRadius = minRadius+5;}
             setSearchBounds(minRadius, maxRadius);
             setSliderReading();
@@ -638,17 +742,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mRoute.addLeg(mLeg);
                 }
                 routesToDestination.add(mRoute);
-                ArrayList<LatLng> points = null;
-                PointsAlgorithm pointsGetter = new PointsAlgorithm();
-                points.addAll(pointsGetter.getPoints(routesToDestination.get(0)));
-                ActivitySearch actSearch = new ActivitySearch((R.string.google_maps_key + ""));
-                double lat1;
-                double lon1;
-                for(int x = 0; x<points.size(); x++){
-                    lat1 = points.get(x).latitude;
-                    lon1 = points.get(x).longitude;
-                    actSearch.getNearbyPlaces(lat1,lon1,(radius_reading),(what_to_do_spinner+""));
-                }
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -1108,6 +1201,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
+
+
+
 }
 
 
