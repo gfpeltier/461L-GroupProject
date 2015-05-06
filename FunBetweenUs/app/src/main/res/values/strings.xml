@@ -6,8 +6,8 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="serverIPAddress">104.236.195.188</string>
-    <string name="google_maps_key">AIzaSyC-vpq2JC9cyIjFiv2eVTc-6o7Mmw3anUY</string>
-    <string name="google_places_key">AIzaSyCcSKxSh9L5iS0TdbNCeJ98CiatB1ULHos</string>
+    <string name="google_maps_key">AIzaSyAb8cOeH98byFxIRQDhKk0vnFpNCIxjaeE</string>
+    <string name="google_places_key">AIzaSyBux2gOmUKBhikH5I4IjXNT-jnbWLVbwgI</string>
     <string name="geo_search_hint">Where are you going?</string>
     <string name="geo_search_button_text">Go</string>
     <string name="radius_slider_label">Search Radius:</string>
@@ -41,6 +41,7 @@
     <!-- Nav Drawer Menu Items -->
     <string-array name="nav_drawer_items">
         <item>Add Gem</item>
+        <item>View Gems</item>
         <item >Sign Out</item>
         <item >Settings</item>
     </string-array>

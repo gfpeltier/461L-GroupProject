@@ -51,6 +51,7 @@ import com.funbetweenus.funbetweenus.data.DirectionsStep;
 
 import com.funbetweenus.funbetweenus.data.Gem;
 import com.funbetweenus.funbetweenus.data.Place;
+import com.funbetweenus.funbetweenus.utils.FindingGems;
 import com.funbetweenus.funbetweenus.utils.PointsAlgorithm;
 import com.funbetweenus.funbetweenus.utils.RetrievePlacesDataTask;
 import com.funbetweenus.funbetweenus.utils.SubmitGemTask;
@@ -509,10 +510,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 });
                 break;
             case "Gems":
-                while (i.hasNext()){
+                /*while (i.hasNext()){
                     LatLng next = i.next();
                     //TODO: Need to implement something else for gems
-                }
+                }*/
+              /*  System.out.println("########### At GEMS case");
+                */
+                FindingGems findingGems = new FindingGems(getApplicationContext());
+                findingGems.execute();
+
                 break;
             case "Out N About":
                 showToast("This category is not yet supported");
@@ -520,6 +526,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    private void parseGemJSON(ArrayList<String> results){
+
+    }
 
     private void parsePlaceJSON(ArrayList<String> results){
         Iterator<String> i = results.iterator();
@@ -1030,13 +1039,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 placeGem = true;
                 showToast("Tap on the map where you would like to place a Gem!");
                 break;
-            case 1:                 // Sign Out
+            case 1:                 // See Gems
+                Log.e("NavTable", "Attempt to show all Gems on maps");
+                FindingGems findingGems = new FindingGems(getApplicationContext());
+                findingGems.execute();
+                break;
+
+            case 2:                 // Sign Out
                 Log.e("NavTable", "Sign Out attempted");
                 Intent logoutIntent = new Intent(MainActivity.this, LoginActivity.class);
                 logoutIntent.putExtra("fromMain",true);
                 startActivity(logoutIntent);
                 break;
-            case 2:                 // Settings
+            case 3:                 // Settings
                 Log.e("NavTable", "Settings view attempted");
                 showToast("Settings feature not yet ready");
                 break;
