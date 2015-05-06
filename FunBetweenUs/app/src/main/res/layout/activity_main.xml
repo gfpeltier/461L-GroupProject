@@ -162,20 +162,24 @@
                             android:text="@string/back_to_list_btn"/>
                         <LinearLayout
                             android:id="@+id/place_details_content"
-                            android:orientation="vertical"
+                            android:orientation="horizontal"
                             android:layout_width="fill_parent"
                             android:layout_height="match_parent"
-                            android:layout_weight="2">
+                            android:layout_weight="1"
+                            >
                             <ImageView
                                 android:id="@+id/place_photo"
-                                android:layout_height="300dp"
-                                android:layout_width="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_height="wrap_content"
+                                android:layout_width="200dp"
+                                android:layout_gravity="left|center_vertical"
                                 android:layout_weight="1" />
                             <LinearLayout
                                 android:id="@+id/place_text_details"
                                 android:orientation="vertical"
                                 android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
                                 android:layout_weight="1">
 
                             </LinearLayout>

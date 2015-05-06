@@ -46,7 +46,7 @@ public class RetrievePlacePhotoTask extends AsyncTask<String, Void, Bitmap> {
         URL url;
         HttpURLConnection conn = null;
         BufferedReader read = null;
-        String baseUrl = "https://maps.googleapis.com/maps/api/place/photo?maxheight=300&photoreference=" + params[0] + "&key=" + apiKey;
+        String baseUrl = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=" + params[0] + "&key=" + apiKey;
         InputStream output = null;
         StringBuilder builder = new StringBuilder();
         String charset = "UTF-8";

@@ -90,6 +90,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -618,7 +619,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     detailsTask.setMyTaskCompleteListener(new RetrievePlaceDetailsTask.OnTaskComplete() {
                         @Override
                         public void setMyTaskComplete(String message) {
-                            parseDetails(message);
+                            parseDetails(message,current);
                         }
                     });
                     RetrievePlacePhotoTask photoTask = new RetrievePlacePhotoTask(MainActivity.this, getString(R.string.google_places_key));
@@ -629,6 +630,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             Log.e("PHOTOBITMAP", ""+photo.getByteCount());
                             ImageView iv = (ImageView) findViewById(R.id.place_photo);
                             iv.setImageBitmap(photo);
+
                         }
                     });
 
@@ -651,8 +653,78 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private void parseDetails(String detailsJSON){
+    private void parseDetails(String detailsJSON,Place c){
+        LinearLayout deets = (LinearLayout) findViewById(R.id.place_text_details);
+        TextView tv3 = new TextView(MainActivity.this);
+        TextView tv4 = new TextView(MainActivity.this);
+        TextView tv5 = new TextView(MainActivity.this);
+        TextView tv6 = new TextView(MainActivity.this);
+        TextView tv7 = new TextView(MainActivity.this);
+        StringBuilder currentAddress = new StringBuilder("");
+        StringBuilder currentPhone = new StringBuilder("");
+        StringBuilder currentHours = new StringBuilder("");
+        Calendar calendar = Calendar.getInstance();
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        try {
+            JSONObject queryResult1 = new JSONObject(detailsJSON);
+            JSONObject resultJson = queryResult1.getJSONObject("result");
+            currentAddress.append(resultJson.getString("formatted_address"));
+            currentPhone.append(resultJson.getString("formatted_phone_number"));
+            JSONObject hoursObject = resultJson.getJSONObject("opening_hours");
+            JSONArray weekdayArray = hoursObject.getJSONArray("weekday_text");
+            currentHours.append(weekdayArray.get(day-2));
+            /*switch (day){
+                case 1: currentHours.append(weekdayObject.getString("Sunday"));
+                break;
+                case 2: currentHours.append(weekdayObject.getString("Monday"));
+                break;
+                case 3: currentHours.append(weekdayObject.getString("Tuesday"));
+                break;
+                case 4: currentHours.append(weekdayObject.getString("Wednesday"));
+                break;
+                case 5: currentHours.append(weekdayObject.getString("Thursday"));
+                break;
+                case 6: currentHours.append(weekdayObject.getString("Friday"));
+                break;
+                case 7: currentHours.append(weekdayObject.getString("Saturday"));
+                break;
+            }*/
 
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        tv3.setText(c.getName());
+        tv3.setTextSize(12);
+        tv3.setTextColor(Color.BLACK);
+        tv3.setGravity(Gravity.LEFT);
+        tv3.setPadding(15, 0, 25, 0);
+        tv4.setText(currentAddress.toString());
+        tv4.setTextSize(12);
+        tv4.setTextColor(Color.BLACK);
+        tv4.setGravity(Gravity.LEFT);
+        tv4.setPadding(15, 0, 25, 0);
+        tv5.setText(currentPhone.toString());
+        tv5.setTextSize(12);
+        tv5.setTextColor(Color.BLACK);
+        tv5.setGravity(Gravity.LEFT);
+        tv5.setPadding(15, 0, 25, 0);
+        tv6.setText(currentHours.toString());
+        tv6.setTextSize(12);
+        tv6.setTextColor(Color.BLACK);
+        tv6.setGravity(Gravity.LEFT);
+        tv6.setPadding(15, 0, 25, 0);
+        tv7.setText("five stars");
+        tv7.setTextSize(12);
+        tv7.setTextColor(Color.BLACK);
+        tv7.setGravity(Gravity.LEFT);
+        tv7.setPadding(15, 0, 25, 0);
+        deets.addView(tv3);
+        deets.addView(tv4);
+        deets.addView(tv5);
+        deets.addView(tv6);
+        deets.addView(tv7);
     }
 
     private void showScrollUI(boolean showScroll){
