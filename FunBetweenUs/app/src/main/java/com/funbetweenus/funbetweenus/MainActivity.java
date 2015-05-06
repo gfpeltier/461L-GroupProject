@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.location.Address;
@@ -34,6 +36,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -53,6 +56,8 @@ import com.funbetweenus.funbetweenus.data.Gem;
 import com.funbetweenus.funbetweenus.data.Place;
 import com.funbetweenus.funbetweenus.utils.FineQueryPointsFinder;
 import com.funbetweenus.funbetweenus.utils.PointsAlgorithm;
+import com.funbetweenus.funbetweenus.utils.RetrievePlaceDetailsTask;
+import com.funbetweenus.funbetweenus.utils.RetrievePlacePhotoTask;
 import com.funbetweenus.funbetweenus.utils.RetrievePlacesDataTask;
 import com.funbetweenus.funbetweenus.utils.SubmitGemTask;
 import com.google.android.gms.common.ConnectionResult;
@@ -62,6 +67,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -76,6 +82,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -544,7 +551,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     JSONObject loc = geo.getJSONObject("location");
                     LatLng latLng = new LatLng(Double.parseDouble(loc.getString("lat")),Double.parseDouble(loc.getString("lng")));
                     String name = jsonResult.getString("name");
-                    String id = jsonResult.getString("id");
+                    String id = jsonResult.getString("place_id");
                     JSONArray photoArr = jsonResult.getJSONArray("photos");
                     JSONObject photoObj = photoArr.getJSONObject(0);
                     String photo = photoObj.getString("photo_reference");
@@ -576,7 +583,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         ll.setOrientation(LinearLayout.VERTICAL);
         Iterator<Place> i = placeResults.iterator();
         while(i.hasNext()){
-            Place current = i.next();
+            final Place current = i.next();
             LinearLayout ill = new LinearLayout(this);
             ill.setBackground(getResources().getDrawable(R.drawable.scroll_back));
             ill.setWeightSum(2);
@@ -598,12 +605,54 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 @Override
                 public void onClick(View v) {
                     //TODO: Need to figure out how to link the object to this listener. Highlight marker, get picture, and do other necessary things
+                    Iterator<Place> j = placeResults.iterator();
+                    while (j.hasNext()){j.next().getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));}
+                    LinearLayout placeTextDetails = (LinearLayout) findViewById(R.id.place_text_details);
+                    placeTextDetails.removeAllViews();
+
+                    current.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLng(current.getMarker().getPosition()));
+
+                    RetrievePlaceDetailsTask detailsTask = new RetrievePlaceDetailsTask(MainActivity.this, getString(R.string.google_places_key));
+                    detailsTask.execute(current.getId());
+                    detailsTask.setMyTaskCompleteListener(new RetrievePlaceDetailsTask.OnTaskComplete() {
+                        @Override
+                        public void setMyTaskComplete(String message) {
+                            parseDetails(message);
+                        }
+                    });
+                    RetrievePlacePhotoTask photoTask = new RetrievePlacePhotoTask(MainActivity.this, getString(R.string.google_places_key));
+                    photoTask.execute(current.getPhoto_ref());
+                    photoTask.setMyTaskCompleteListener(new RetrievePlacePhotoTask.OnTaskComplete() {
+                        @Override
+                        public void setMyTaskComplete(Bitmap photo) {
+                            Log.e("PHOTOBITMAP", ""+photo.getByteCount());
+                            ImageView iv = (ImageView) findViewById(R.id.place_photo);
+                            iv.setImageBitmap(photo);
+                        }
+                    });
+
+                    findViewById(R.id.back_to_list_btn).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            findViewById(R.id.place_scroll_view).setVisibility(View.VISIBLE);
+                            findViewById(R.id.place_details_layout).setVisibility(View.GONE);
+                        }
+                    });
+
+                    findViewById(R.id.place_scroll_view).setVisibility(View.GONE);
+                    findViewById(R.id.place_details_layout).setVisibility(View.VISIBLE);
                 }
             });
             ll.addView(ill);
         }
         sv.addView(ll);
         showScrollUI(true);
+    }
+
+
+    private void parseDetails(String detailsJSON){
+
     }
 
     private void showScrollUI(boolean showScroll){
@@ -613,6 +662,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         findViewById(R.id.place_scroll_view).setVisibility(showScroll ? View.VISIBLE:View.GONE);
         findViewById(R.id.back_to_radius_button).setVisibility(showScroll ? View.VISIBLE:View.GONE);
+
+
+        //Need to make sure the place details go away whenever we go back to select a different radius
+        findViewById(R.id.place_details_layout).setVisibility(View.GONE);
 
         //TODO: Dynamically change padding for the map to account for changes
 

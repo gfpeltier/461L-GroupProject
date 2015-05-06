@@ -15,6 +15,11 @@ public class Place {
     private Marker marker;
 
 
+    private String formattedAddress;
+    private String phone;
+    private String operatingHours;
+
+
     public Place(LatLng loc, String pName, String pid, String photo, String addr){
         location = loc;
         name = pName;
@@ -34,6 +39,10 @@ public class Place {
     public String getName(){return name;}
 
     public String getVicinity(){return vicinity;}
+
+    public String getPhoto_ref(){return photo_ref;}
+
+    public Marker getMarker(){return marker;}
 
 
     @Override
