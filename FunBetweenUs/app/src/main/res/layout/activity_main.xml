@@ -18,7 +18,7 @@
                         xmlns:tools="http://schemas.android.com/tools" android:id="@+id/container"
                         android:layout_width="match_parent" android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:background="#CC9EC301"
+                        android:background="#CCD7D7D7"
                         tools:context="com.funbetweenus.funbetweenus.MainActivity" tools:ignore="MergeRootFrame" >
 
                     <LinearLayout android:orientation="vertical"
@@ -42,6 +42,8 @@
                                 android:layout_gravity="right"
                                 android:text="@string/back_to_address_btn"
                                 android:onClick="backToChooseRadius"
+                                android:textColor="#fff"
+                                android:background="@drawable/button_bg"
                                 android:visibility="gone"/>
                             <!--<Spinner android:id="@+id/alone_or_friend_spinner"
                                 android:gravity="center"
@@ -55,7 +57,9 @@
                                 android:layout_weight="1"
                                 android:textOff="Just Me!"
                                 android:textOn="Meet a Friend!"
-                                android:onClick="onToggleClicked" />
+                                android:onClick="onToggleClicked"
+                                android:textColor="#fff"
+                                android:background="@drawable/button_bg"/>
                             <Spinner android:id="@+id/what_to_do_spinner"
                                 android:gravity="center"
                                 android:layout_height="50dp"
@@ -106,7 +110,9 @@
                                     android:layout_weight="1"
                                     android:gravity="center_vertical|center_horizontal"
                                     android:text="@string/back_to_address_btn"
-                                    android:onClick="backToAddressEnter"/>
+                                    android:onClick="backToAddressEnter"
+                                    android:textColor="#fff"
+                                    android:background="@drawable/button_bg"/>
                                 <Button
                                     android:id="@+id/find_activities_btn"
                                     android:layout_width="wrap_content"
@@ -114,6 +120,8 @@
                                     android:layout_weight="1"
                                     android:gravity="center_vertical|center_horizontal"
                                     android:onClick="findFunListener"
+                                    android:background="@drawable/button_bg"
+                                    android:textColor="#fff"
                                     android:text="@string/find_activities_btn"/>
                             </LinearLayout>
                         </LinearLayout>
@@ -132,6 +140,8 @@
                                 android:layout_width="0dp"
                                 android:layout_height="50dp"
                                 android:layout_weight="1"
+                                android:background="@drawable/button_bg"
+                                android:textColor="#fff"
                                 android:text="@string/geo_search_button_text"
                                 android:onClick="goToAddress"/>
                         </LinearLayout>
@@ -140,7 +150,7 @@
                     <ScrollView
                         android:id="@+id/place_scroll_view"
                         android:layout_height="200dp"
-                        android:background="#F39EC301"
+                        android:background="#F3FFFFFF"
                         android:layout_width="fill_parent"
                         android:layout_gravity="bottom"
                         android:visibility="gone"
@@ -151,7 +161,7 @@
                         android:orientation="vertical"
                         android:layout_height="200dp"
                         android:layout_width="fill_parent"
-                        android:background="#F39EC301"
+                        android:background="#F3FFFFFF"
                         android:layout_gravity="bottom"
                         android:visibility="gone">
                         <Button
@@ -159,6 +169,8 @@
                             android:layout_gravity="top"
                             android:layout_height="wrap_content"
                             android:layout_width="fill_parent"
+                            android:textColor="#fff"
+                            android:background="@drawable/button_bg"
                             android:text="@string/back_to_list_btn"/>
                         <LinearLayout
                             android:id="@+id/place_details_content"

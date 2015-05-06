@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -48,6 +49,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 
+import com.funbetweenus.funbetweenus.data.Constants;
 import com.funbetweenus.funbetweenus.data.DirectionsLeg;
 import com.funbetweenus.funbetweenus.data.DirectionsRoute;
 import com.funbetweenus.funbetweenus.data.DirectionsStep;
@@ -330,7 +332,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     // so it can use GCM/HTTP or CCS to send messages to your app.
                     // The request to your server should be authenticated if your app
                     // is using accounts.
-                    sendRegistrationIdToBackend();
+
+
+                    //TODO:Allow app to notify server of ID and email of user
+                    //UNCOMMENT THIS WHEN APP IS RUNNING!!!!
+                    //notifyServerUserMap(regid);
 
                     // For this demo: we don't need to send it because the device
                     // will send upstream messages to a server that echo back the
@@ -381,6 +387,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         editor.putString(PROPERTY_REG_ID, regId);
         editor.putInt(PROPERTY_APP_VERSION, appVersion);
         editor.commit();
+    }
+
+
+    private void notifyServerUserMap(String regId){
+        try {
+            Bundle data = new Bundle();
+            // the account is used for keeping
+            // track of user notifications
+            data.putString("email", user.getEmail());
+            // the action is used to distinguish
+            // different message types on the server
+            data.putInt("action", Constants.ACTION_REGISTER);
+            String msgId = Integer.toString(getNextMsgId());
+            gcm.send(SENDER_ID + "@gcm.googleapis.com", msgId, data);
+        } catch (IOException e) {
+            Log.e("grokkingandroid",
+                    "IOException while sending registration id", e);
+        }
+    }
+
+    private int getNextMsgId(){
+        return msgId.incrementAndGet();
     }
 
 
@@ -461,12 +489,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
             AlertDialog dialog = builder.create();
-            findViewById(R.id.friend_search_btn).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //TODO: Need to contact GCM here
-                }
-            });
             dialog.show();
         }else{
             //TODO: anything to do when set to "JUST ME!"
@@ -592,11 +614,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             TextView tv2 = new TextView(this);
             tv.setText(current.getName());
             tv.setTextSize(22);
+            tv.setTypeface(Typeface.DEFAULT_BOLD);
+            tv.setTextColor(Color.parseColor("#1300A6"));
             tv.setGravity(Gravity.CENTER);
             tv.setPadding(15, 0, 25, 0);
             tv.setLayoutParams(new TableLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
             tv2.setText(current.getVicinity());
-            tv2.setTextSize(18);
+            tv2.setTextSize(16);
             tv2.setGravity(Gravity.CENTER);
             tv2.setPadding(0, 0, 0, 15);
             tv2.setLayoutParams(new TableLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
@@ -697,7 +721,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         tv3.setText(c.getName());
         tv3.setTextSize(12);
-        tv3.setTextColor(Color.BLACK);
+        tv3.setTypeface(Typeface.DEFAULT_BOLD);
+        tv3.setTextColor(Color.parseColor("#1300A6"));
         tv3.setGravity(Gravity.LEFT);
         tv3.setPadding(15, 0, 25, 0);
         tv4.setText(currentAddress.toString());
@@ -1283,7 +1308,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             destMarker = mMap.addMarker(new MarkerOptions()
                     .title("Your Destination")
                     .snippet(address)
-                    .position(loc));
+                    .position(loc)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
             new GetDirectionsTask().execute(loc);
         } catch (IOException e) {
             e.printStackTrace();
