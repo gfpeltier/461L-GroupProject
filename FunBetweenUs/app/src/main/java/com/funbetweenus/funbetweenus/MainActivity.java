@@ -51,6 +51,7 @@ import com.funbetweenus.funbetweenus.data.DirectionsStep;
 
 import com.funbetweenus.funbetweenus.data.Gem;
 import com.funbetweenus.funbetweenus.data.Place;
+import com.funbetweenus.funbetweenus.utils.FineQueryPointsFinder;
 import com.funbetweenus.funbetweenus.utils.PointsAlgorithm;
 import com.funbetweenus.funbetweenus.utils.RetrievePlacesDataTask;
 import com.funbetweenus.funbetweenus.utils.SubmitGemTask;
@@ -131,8 +132,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     GoogleCloudMessaging gcm;
     String regid;
-    AtomicInteger mdgId = new AtomicInteger();
-    TextView mDisplay;
+    AtomicInteger msgId = new AtomicInteger();
 
     protected Context mainCon;
 
@@ -400,7 +400,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         int progress = seekBar.getProgress();
         double realRadius = evaluateRealRadius(progress);
         TextView reading = (TextView) findViewById(R.id.radius_reading);
-        reading.setText(realRadius+"mi");
+        DecimalFormat df = new DecimalFormat("####0.00");
+        reading.setText(df.format(realRadius)+"mi");
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -452,6 +453,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
             AlertDialog dialog = builder.create();
+            findViewById(R.id.friend_search_btn).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //TODO: Need to contact GCM here
+                }
+            });
             dialog.show();
         }else{
             //TODO: anything to do when set to "JUST ME!"
@@ -460,7 +467,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     public void findFunListener(View view){
-        ArrayList<LatLng> queryPoints = new PointsAlgorithm().getPoints(routesToDestination.get(0));
+        //ArrayList<LatLng> queryPoints = new PointsAlgorithm().getPoints(routesToDestination.get(0));
+        ArrayList<LatLng> queryPoints = new FineQueryPointsFinder(routesToDestination.get(0).getDistance(), directionsPathPoints).getQueryPoints();
         SeekBar radiusSlider = (SeekBar) findViewById(R.id.radius_slider);
         double radius = (int) Math.round(evaluateRealRadius(radiusSlider.getProgress()) * METERSINMILE);
         Spinner categorySpinner = (Spinner) findViewById(R.id.what_to_do_spinner);
@@ -522,6 +530,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void parsePlaceJSON(ArrayList<String> results){
+        Log.e("JSONResponse", ""+results.get(0));
         Iterator<String> i = results.iterator();
         placeResults = new ArrayList<Place>();
         while(i.hasNext()){

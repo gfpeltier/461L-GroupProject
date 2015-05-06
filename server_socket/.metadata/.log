@@ -139,3 +139,46 @@ Caused by: java.lang.IllegalArgumentException: Logging bundle must not be null.
 	at org.eclipse.core.runtime.Platform.getLog(Platform.java:1017)
 	at com.google.gdt.eclipse.platform.jetty.JettyEclipseLogger.<clinit>(JettyEclipseLogger.java:35)
 	... 20 more
+!SESSION 2015-05-05 22:49:53.945 -----------------------------------------------
+eclipse.buildId=4.4.1.M20140925-0400
+java.version=1.7.0_67
+java.vendor=Oracle Corporation
+BootLoader constants: OS=macosx, ARCH=x86_64, WS=cocoa, NL=en_US
+Framework arguments:  -product org.eclipse.epp.package.java.product -keyring /Users/grantpeltier93/.eclipse_keyring -showlocation
+Command-line arguments:  -os macosx -ws cocoa -arch x86_64 -product org.eclipse.epp.package.java.product -keyring /Users/grantpeltier93/.eclipse_keyring -showlocation
+
+!ENTRY org.eclipse.m2e.logback.configuration 2 0 2015-05-05 22:50:10.087
+!MESSAGE Exception while setting up logging:org.eclipse.osgi.internal.framework.EquinoxConfiguration$1 cannot be cast to java.lang.String
+!STACK 0
+java.lang.ClassCastException: org.eclipse.osgi.internal.framework.EquinoxConfiguration$1 cannot be cast to java.lang.String
+	at org.eclipse.m2e.logback.configuration.LogHelper.logJavaProperties(LogHelper.java:26)
+	at org.eclipse.m2e.logback.configuration.LogPlugin.loadConfiguration(LogPlugin.java:189)
+	at org.eclipse.m2e.logback.configuration.LogPlugin.configureLogback(LogPlugin.java:144)
+	at org.eclipse.m2e.logback.configuration.LogPlugin.access$2(LogPlugin.java:107)
+	at org.eclipse.m2e.logback.configuration.LogPlugin$1.run(LogPlugin.java:62)
+	at java.util.TimerThread.mainLoop(Timer.java:555)
+	at java.util.TimerThread.run(Timer.java:505)
+
+!ENTRY org.eclipse.core.net 1 0 2015-05-05 22:50:18.614
+!MESSAGE System property http.nonProxyHosts has been set to local|*.local|169.254/16|*.169.254/16 by an external source. This value will be overwritten using the values from the preferences
+
+!ENTRY org.eclipse.jdt.core 4 0 2015-05-05 22:50:51.665
+!MESSAGE Invalid ZIP archive: lib/smack-android-4.1.0-sources.jar [in SmackServerSocket]
+
+!ENTRY org.eclipse.jdt.core 4 0 2015-05-05 22:50:51.666
+!MESSAGE Invalid ZIP archive: lib/smack-core-4.1.0-sources.jar [in SmackServerSocket]
+
+!ENTRY org.eclipse.jdt.core 4 0 2015-05-05 22:50:51.726
+!MESSAGE Invalid ZIP archive: lib/smack-debug-4.1.0-sources.jar [in SmackServerSocket]
+
+!ENTRY org.eclipse.jdt.core 4 0 2015-05-05 22:50:51.816
+!MESSAGE Invalid ZIP archive: lib/smack-java7-4.1.0-sources.jar [in SmackServerSocket]
+
+!ENTRY org.eclipse.jdt.core 4 0 2015-05-05 22:50:51.884
+!MESSAGE Invalid ZIP archive: lib/smack-android-extensions-4.1.0-sources.jar [in SmackServerSocket]
+
+!ENTRY org.eclipse.jdt.core 4 0 2015-05-05 22:50:51.899
+!MESSAGE Invalid ZIP archive: lib/smack-extensions-4.1.0-sources.jar [in SmackServerSocket]
+
+!ENTRY org.eclipse.jdt.core 4 0 2015-05-05 22:50:51.989
+!MESSAGE Invalid ZIP archive: lib/smack-tcp-4.1.0-sources.jar [in SmackServerSocket]

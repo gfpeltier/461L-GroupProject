@@ -3,18 +3,11 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="lib" path="lib/smack-android-4.1.0.jar"/>
-	<classpathentry kind="lib" path="lib/smack-android-4.1.0-sources.jar"/>
-	<classpathentry kind="lib" path="lib/smack-core-4.1.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/smack-core-4.1.0.jar"/>
-	<classpathentry kind="lib" path="lib/smack-debug-4.1.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/smack-debug-4.1.0.jar"/>
-	<classpathentry kind="lib" path="lib/smack-java7-4.1.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/smack-java7-4.1.0.jar"/>
-	<classpathentry kind="lib" path="lib/smack-android-extensions-4.1.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/smack-android-extensions-4.1.0.jar"/>
-	<classpathentry kind="lib" path="lib/smack-extensions-4.1.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/smack-extensions-4.1.0.jar"/>
-	<classpathentry kind="lib" path="lib/smack-tcp-4.1.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/smack-tcp-4.1.0.jar"/>
 	<classpathentry kind="lib" path="lib/json-simple-1.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/kxml2-2.3.0.jar"/>
