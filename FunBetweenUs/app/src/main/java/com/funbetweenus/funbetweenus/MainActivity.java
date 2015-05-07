@@ -83,6 +83,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -510,14 +511,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 });
                 break;
             case "Gems":
-                /*while (i.hasNext()){
-                    LatLng next = i.next();
                     //TODO: Need to implement something else for gems
-                }*/
-              /*  System.out.println("########### At GEMS case");
-                */
                 FindingGems findingGems = new FindingGems(getApplicationContext());
                 findingGems.execute();
+                findingGems.setMyTaskCompleteListener(new FindingGems.OnTaskComplete() {
+
+                    @Override
+                    public void setMyTaskComplete(String json) {
+                        parseGems(json);
+                    }
+                });
 
                 break;
             case "Out N About":
@@ -526,7 +529,60 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void parseGemJSON(ArrayList<String> results){
+    private void parseGems(String jsonStr){
+        ArrayList<LatLng> queryPoints = new PointsAlgorithm().getPoints(routesToDestination.get(0));
+        SeekBar radiusSlider = (SeekBar) findViewById(R.id.radius_slider);
+        double radius = (int) Math.round(evaluateRealRadius(radiusSlider.getProgress()) * METERSINMILE);
+        String code = null;
+        LatLng loc = null;
+        String title = null;
+        int id = 0;
+        int userId = 0;
+        String description = null;
+        gemResults = new ArrayList<Gem>();
+        try{
+            JSONObject queryResult = new JSONObject(jsonStr);
+            code = queryResult.getString("code");
+            if (code.equals("success")) {
+                JSONArray jsonGems = queryResult.getJSONArray("object");
+                for (int k = 0; k < jsonGems.length(); k++) {
+                    JSONObject singleResult = jsonGems.getJSONObject(k);
+                    loc = new LatLng(Double.parseDouble(singleResult.getString("latitude")), Double.parseDouble(singleResult.getString("longitude")));
+                    title = singleResult.getString("title");
+                    id = singleResult.getInt("id");
+                    userId = singleResult.getInt("user");
+                    description = singleResult.getString("description");
+               /* Date date;
+                date = (Date) singleResult.getInt("date");*/
+                    Iterator i = queryPoints.iterator();
+                    while (i.hasNext()) {
+                        LatLng next = (LatLng) i.next();
+                        double lat = next.latitude;
+                        double lng = next.longitude;
+                        if ((Double.parseDouble(singleResult.getString("latitude")) <= (lat+radius) ||
+                                Double.parseDouble(singleResult.getString("latitude")) >= (lat-radius)) &&
+                                (Double.parseDouble(singleResult.getString("longitude")) <= (lng+radius) ||
+                                        Double.parseDouble(singleResult.getString("longitude")) >= (lng-radius))) {
+                            gemResults.add(new Gem(loc, title, description, userId, id, null));
+                        }
+                    }
+                }
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+        if(!code.isEmpty() && code.equals("success")){
+            // populateScrollGems();		//This is some method you can create to populate the srollable places view with Gem data. Similar to an existing one for places
+            for(int j=0; j<gemResults.size(); j++){
+                userMarker = mMap.addMarker(new MarkerOptions()
+                        .title(title)
+                        .snippet(description)
+                        .position(loc));
+            }
+            showToast("We found the GEMS along your route");
+        }else{
+            showToast("No Gems found");
+        }
 
     }
 
@@ -1041,8 +1097,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
             case 1:                 // See Gems
                 Log.e("NavTable", "Attempt to show all Gems on maps");
+                System.out.println("**********Beginning step: Should print");
                 FindingGems findingGems = new FindingGems(getApplicationContext());
                 findingGems.execute();
+                findingGems.setMyTaskCompleteListener(new FindingGems.OnTaskComplete(){
+                    @Override
+                    public void setMyTaskComplete(String json) {
+                        parseGemJSON(json);
+                    }
+                });
                 break;
 
             case 2:                 // Sign Out
@@ -1058,6 +1121,53 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             default:
                 break;
         }
+    }
+
+    private ArrayList<Gem> gemResults;
+
+
+    private void parseGemJSON(String jsonStr){
+        String code = null;
+        LatLng loc = null;
+        String title = null;
+        int id = 0;
+        int userId = 0;
+        String description = null;
+        gemResults = new ArrayList<Gem>();
+        try{
+            JSONObject queryResult = new JSONObject(jsonStr);
+            code = queryResult.getString("code");
+            if (code.equals("success")) {
+                JSONArray jsonGems = queryResult.getJSONArray("object");
+                for (int k = 0; k < jsonGems.length(); k++) {
+                    JSONObject singleResult = jsonGems.getJSONObject(k);
+                    loc = new LatLng(Double.parseDouble(singleResult.getString("latitude")), Double.parseDouble(singleResult.getString("longitude")));
+                    title = singleResult.getString("title");
+                    id = singleResult.getInt("id");
+                    userId = singleResult.getInt("user");
+                    description = singleResult.getString("description");
+               /* Date date;
+                date = (Date) singleResult.getInt("date");*/
+
+                    gemResults.add(new Gem(loc, title, description, userId, id, null));
+                }
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+        if(!code.isEmpty() && code.equals("success")){
+           // populateScrollGems();		//This is some method you can create to populate the srollable places view with Gem data. Similar to an existing one for places
+            for(int j=0; j<gemResults.size(); j++){
+                userMarker = mMap.addMarker(new MarkerOptions()
+                        .title(title)
+                        .snippet(description)
+                        .position(loc));
+            }
+            showToast("We found the GEMS");
+        }else{
+            showToast("No Gems found");
+        }
+
     }
 
 

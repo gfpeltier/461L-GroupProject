@@ -86,9 +86,12 @@ public class FindingGems extends AsyncTask<Void, Void, String> {
                 builder.append(ln +"/n");
             }
             Log.e("Gem_JSON", ""+builder.toString());
+            System.out.println("**********Should print right here!!!");
             read.close();
             //result = builder.toString();
+            System.out.println("**********Didn't make it through execution");
             return builder.toString();
+
         }catch (Exception e){
             e.printStackTrace();
             Log.e("ERROR", ""+e.getMessage());
@@ -115,11 +118,11 @@ public class FindingGems extends AsyncTask<Void, Void, String> {
         return Gems;*/
     }
 
-  /*  protected void onPostExecute(String xml){
+    protected void onPostExecute(String xml){
         onTaskComplete.setMyTaskComplete(xml);
         progDailog.dismiss();
-    }*/
-
+    }
+/*
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
         Log.i("CheckDBResult", result);
@@ -129,20 +132,31 @@ public class FindingGems extends AsyncTask<Void, Void, String> {
         JSONObject gemObject = null;
         //placeResults = new ArrayList<Place>();
         String code = "";
+        System.out.println("######## At on Post Method");
         try{
+            System.out.println("************* Inside first try block");
             jsonObject = new JSONObject(result);
             gemObject = jsonObject.getJSONObject("object");
             code = (String) jsonObject.get("code");
             Log.i("ResultCode", code);
         }catch(Exception e){
             e.printStackTrace();
+            System.out.println("**********Didnt make it through first try block");
         }
-
+/*
+        System.out.println("################ Made it through first try block");
         if(code.equals("success")){
+            System.out.println("**********Inside if statement block");
             try {
-                JSONArray jsonResults = (JSONArray) jsonObject.get("result");
-                for (int k = 0; k < jsonResults.length(); k++) {
-                    JSONObject jsonResult = jsonResults.getJSONObject(k);
+                System.out.println("##################Inside second try block");
+                //JSONArray jsonResults = (JSONArray) jsonObject.get("id");
+                JSONArray jsonResults = jsonObject.getJSONArray("id");
+                System.out.println("##################### After JSONARRAY");
+                /*for(int k = 0; k<jsonObject.length(); k++) {
+                    System.out.println(jsonObject);
+                }
+               for (int k = 0; k < jsonObject.length(); k++) {
+                    JSONObject jsonResult = jsonObject; //.getJSONObject(k);
                     LatLng latLng = new LatLng(Double.parseDouble(jsonResult.getString("latitude")),Double.parseDouble(jsonResult.getString("longitude")));
                     String title = jsonResult.getString("title");
                     String id = jsonResult.getString("id");
@@ -158,14 +172,15 @@ public class FindingGems extends AsyncTask<Void, Void, String> {
                       //  placeResults.add(newPlace);
                     //}
                 }
-            }catch (JSONException e){
-                    e.printStackTrace();
+            }catch (JSONException f){
+                    f.printStackTrace();
                 }
 
         }else{
             //error
         }
-    }
+    }*/
+
     public interface OnTaskComplete {
         public void setMyTaskComplete(String message);
     }
