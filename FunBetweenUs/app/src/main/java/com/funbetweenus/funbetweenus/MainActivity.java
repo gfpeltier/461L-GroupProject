@@ -130,6 +130,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private double lowLimitSearchRadius;
     private double highLimitSearchRadius;
 
+    private ArrayList<Gem> gemResults;
+
 
     GoogleCloudMessaging gcm;
     String regid;
@@ -533,6 +535,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         ArrayList<LatLng> queryPoints = new PointsAlgorithm().getPoints(routesToDestination.get(0));
         SeekBar radiusSlider = (SeekBar) findViewById(R.id.radius_slider);
         double radius = (int) Math.round(evaluateRealRadius(radiusSlider.getProgress()) * METERSINMILE);
+        double latrad = (radius/2)/110574;
+        double lngrad = (radius/2)/(111320);
         String code = null;
         LatLng loc = null;
         String title = null;
@@ -559,11 +563,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         LatLng next = (LatLng) i.next();
                         double lat = next.latitude;
                         double lng = next.longitude;
-                        if ((Double.parseDouble(singleResult.getString("latitude")) <= (lat+radius) ||
-                                Double.parseDouble(singleResult.getString("latitude")) >= (lat-radius)) &&
-                                (Double.parseDouble(singleResult.getString("longitude")) <= (lng+radius) ||
-                                        Double.parseDouble(singleResult.getString("longitude")) >= (lng-radius))) {
+                        if ((Double.parseDouble(singleResult.getString("latitude")) <= (lat+latrad) &&
+                                Double.parseDouble(singleResult.getString("latitude")) >= (lat-latrad)) &&
+                                (Double.parseDouble(singleResult.getString("longitude")) <= (lng+lngrad) &&
+                                        Double.parseDouble(singleResult.getString("longitude")) >= (lng-lngrad))) {
                             gemResults.add(new Gem(loc, title, description, userId, id, null));
+                            break;
                         }
                     }
                 }
@@ -572,18 +577,55 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             e.printStackTrace();
         }
         if(!code.isEmpty() && code.equals("success")){
-            // populateScrollGems();		//This is some method you can create to populate the srollable places view with Gem data. Similar to an existing one for places
+            populateGemsScrollView();		//This is some method you can create to populate the srollable places view with Gem data. Similar to an existing one for places
             for(int j=0; j<gemResults.size(); j++){
                 userMarker = mMap.addMarker(new MarkerOptions()
-                        .title(title)
-                        .snippet(description)
-                        .position(loc));
+                        .title(gemResults.get(j).getTitle())
+                        .snippet(gemResults.get(j).getDescription())
+                        .position(gemResults.get(j).getLocation()));
             }
             showToast("We found the GEMS along your route");
         }else{
             showToast("No Gems found");
         }
+    }
 
+    private void populateGemsScrollView(){
+        ScrollView sv = (ScrollView) findViewById(R.id.place_scroll_view);
+        sv.removeAllViews();
+        LinearLayout ll = new LinearLayout(this);
+        ll.setOrientation(LinearLayout.VERTICAL);
+        Iterator<Gem> i = gemResults.iterator();
+        int size = gemResults.size();
+        while(i.hasNext()){
+            Gem current = i.next();
+            LinearLayout ill = new LinearLayout(this);
+            ill.setBackground(getResources().getDrawable(R.drawable.scroll_back));
+            ill.setWeightSum(2);
+            TextView tv = new TextView(this);
+            TextView tv2 = new TextView(this);
+            tv.setText(current.getTitle());
+            tv.setTextSize(22);
+            tv.setGravity(Gravity.CENTER);
+            tv.setPadding(15, 0, 25, 0);
+            tv.setLayoutParams(new TableLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            tv2.setText(current.getDescription());
+            tv2.setTextSize(18);
+            tv2.setGravity(Gravity.CENTER);
+            tv2.setPadding(0, 0, 0, 15);
+            tv2.setLayoutParams(new TableLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            ill.addView(tv);
+            ill.addView(tv2);
+            ill.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //TODO: Need to figure out how to link the object to this listener. Highlight marker, get picture, and do other necessary things
+                }
+            });
+            ll.addView(ill);
+        }
+        sv.addView(ll);
+        showScrollUI(true);
     }
 
     private void parsePlaceJSON(ArrayList<String> results){
@@ -654,6 +696,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 @Override
                 public void onClick(View v) {
                     //TODO: Need to figure out how to link the object to this listener. Highlight marker, get picture, and do other necessary things
+                    findViewById(R.id.place_scroll_view).setVisibility(View.GONE);
+                    //findViewById(R.id.place_details_layout).setVisibility(View.VISIBLE);
+
                 }
             });
             ll.addView(ill);
@@ -1086,9 +1131,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void selectItem(int pos){
+    private void selectItem(int pos) {
         Log.e("NavTableSelect", "" + pos);
-        switch (pos){
+        switch (pos) {
             case 0:                 // Add Gem
                 Log.e("NavTable", "Attempt to add Gem to map");
                 mDrawerLayout.closeDrawer(mDrawerFrame);
@@ -1098,20 +1143,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             case 1:                 // See Gems
                 Log.e("NavTable", "Attempt to show all Gems on maps");
                 System.out.println("**********Beginning step: Should print");
-                FindingGems findingGems = new FindingGems(getApplicationContext());
+                FindingGems findingGems = new FindingGems(getApplicationContext(), user);
                 findingGems.execute();
-                findingGems.setMyTaskCompleteListener(new FindingGems.OnTaskComplete(){
+                findingGems.setMyTaskCompleteListener(new FindingGems.OnTaskComplete() {
                     @Override
                     public void setMyTaskComplete(String json) {
                         parseGemJSON(json);
                     }
                 });
+                mDrawerLayout.closeDrawer(mDrawerFrame);
                 break;
-
             case 2:                 // Sign Out
                 Log.e("NavTable", "Sign Out attempted");
                 Intent logoutIntent = new Intent(MainActivity.this, LoginActivity.class);
-                logoutIntent.putExtra("fromMain",true);
+                logoutIntent.putExtra("fromMain", true);
                 startActivity(logoutIntent);
                 break;
             case 3:                 // Settings
@@ -1122,9 +1167,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
         }
     }
-
-    private ArrayList<Gem> gemResults;
-
 
     private void parseGemJSON(String jsonStr){
         String code = null;
@@ -1159,9 +1201,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
            // populateScrollGems();		//This is some method you can create to populate the srollable places view with Gem data. Similar to an existing one for places
             for(int j=0; j<gemResults.size(); j++){
                 userMarker = mMap.addMarker(new MarkerOptions()
-                        .title(title)
-                        .snippet(description)
-                        .position(loc));
+                        .title(gemResults.get(j).getTitle())
+                        .snippet(gemResults.get(j).getDescription())
+                        .position(gemResults.get(j).getLocation()));
             }
             showToast("We found the GEMS");
         }else{

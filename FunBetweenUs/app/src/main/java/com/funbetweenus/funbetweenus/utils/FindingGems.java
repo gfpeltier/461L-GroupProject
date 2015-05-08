@@ -37,10 +37,17 @@ public class FindingGems extends AsyncTask<Void, Void, String> {
     private OnTaskComplete onTaskComplete;
     private ProgressDialog progDailog;
     private Context context;
+    private String  userId;
 
     public FindingGems(Context ctx){
         context = ctx;
         progDailog = new ProgressDialog(ctx);
+    }
+
+    public FindingGems(Context ctx, User user){
+        context = ctx;
+        progDailog = new ProgressDialog(ctx);
+        this.userId = user.getId();
     }
 
     @Override
@@ -52,7 +59,8 @@ public class FindingGems extends AsyncTask<Void, Void, String> {
         URL url;
         HttpURLConnection conn = null;
         BufferedReader read = null;
-
+       /* User current = new User();
+        String id = current.getId();*/
         ArrayList<String> Gems = new ArrayList<>();
 
         StringBuilder builder = new StringBuilder();
@@ -60,15 +68,8 @@ public class FindingGems extends AsyncTask<Void, Void, String> {
              uri = new URI("http", "104.236.195.188",
                      "/php/findGem.php",
                      null);
-
-            //url = new URL("http://104.236.195.188/php/findGem.php?");
-
-            //url = uri.toURL();
-            String strUrl = "http://" + "104.236.195.188" + "/php/findGem.php?uid=" + "16";
+            String strUrl = "http://" + "104.236.195.188" + "/php/findGem.php?uid=" + userId;
             url = new URL(strUrl);
-            //Log.e("Gem_URL", url.toString());
-            //System.out.println("******************* GEM_URL: " + url.toString());
-            //conn.setRequestMethod("GET");
             conn = (HttpURLConnection)url.openConnection();
             int statusCode = conn.getResponseCode();
             if (statusCode != 200 /* or statusCode <= 200 && statusCode < 300 */) {
@@ -86,10 +87,8 @@ public class FindingGems extends AsyncTask<Void, Void, String> {
                 builder.append(ln +"/n");
             }
             Log.e("Gem_JSON", ""+builder.toString());
-            System.out.println("**********Should print right here!!!");
             read.close();
-            //result = builder.toString();
-            System.out.println("**********Didn't make it through execution");
+            //result = builder.toString()
             return builder.toString();
 
         }catch (Exception e){
@@ -98,88 +97,12 @@ public class FindingGems extends AsyncTask<Void, Void, String> {
             Log.e("ERROR", "" + e.toString());
             return null;
         }
-/*
-        //parse json data
-        try{
-            JSONArray jsonArray = new JSONArray(result);
-            for (int i=0; i<jsonArray.length()-1; i++) {
-                JSONObject jsonData = jsonArray.getJSONObject(i);
-                Gems.add(jsonData.getString("latitude"));
-                Gems.add(jsonData.getString("longitude"));
-                Gems.add(jsonData.getString("title"));
-                Gems.add(jsonData.getString("description"));
-                Gems.add(jsonData.getString("user"));
-            }
-        }catch (JSONException e) {
-            Log.e("log_tag", "Error parsing data" + e.toString());
-        }
-
-       // System.out.println(Gems);
-        return Gems;*/
     }
 
     protected void onPostExecute(String xml){
         onTaskComplete.setMyTaskComplete(xml);
         progDailog.dismiss();
     }
-/*
-    protected void onPostExecute(String result) {
-        super.onPostExecute(result);
-        Log.i("CheckDBResult", result);
-        // After completing http call
-        // will close this activity and lauch main activity
-        JSONObject jsonObject = null;
-        JSONObject gemObject = null;
-        //placeResults = new ArrayList<Place>();
-        String code = "";
-        System.out.println("######## At on Post Method");
-        try{
-            System.out.println("************* Inside first try block");
-            jsonObject = new JSONObject(result);
-            gemObject = jsonObject.getJSONObject("object");
-            code = (String) jsonObject.get("code");
-            Log.i("ResultCode", code);
-        }catch(Exception e){
-            e.printStackTrace();
-            System.out.println("**********Didnt make it through first try block");
-        }
-/*
-        System.out.println("################ Made it through first try block");
-        if(code.equals("success")){
-            System.out.println("**********Inside if statement block");
-            try {
-                System.out.println("##################Inside second try block");
-                //JSONArray jsonResults = (JSONArray) jsonObject.get("id");
-                JSONArray jsonResults = jsonObject.getJSONArray("id");
-                System.out.println("##################### After JSONARRAY");
-                /*for(int k = 0; k<jsonObject.length(); k++) {
-                    System.out.println(jsonObject);
-                }
-               for (int k = 0; k < jsonObject.length(); k++) {
-                    JSONObject jsonResult = jsonObject; //.getJSONObject(k);
-                    LatLng latLng = new LatLng(Double.parseDouble(jsonResult.getString("latitude")),Double.parseDouble(jsonResult.getString("longitude")));
-                    String title = jsonResult.getString("title");
-                    String id = jsonResult.getString("id");
-                    String description = jsonResult.getString("desription");
-                    Place newPlace = new Place(latLng, title, id, null, description);
-                    Log.e("GeneratedPlace", newPlace.toString());
-                    //if(!placeResults.contains(newPlace)){
-                        Marker mark = mMap.addMarker(new MarkerOptions()
-                                .title(newPlace.getName())
-                                .snippet(newPlace.getVicinity())
-                                .position(newPlace.getLocation()));
-                        newPlace.setMarker(mark);
-                      //  placeResults.add(newPlace);
-                    //}
-                }
-            }catch (JSONException f){
-                    f.printStackTrace();
-                }
-
-        }else{
-            //error
-        }
-    }*/
 
     public interface OnTaskComplete {
         public void setMyTaskComplete(String message);
