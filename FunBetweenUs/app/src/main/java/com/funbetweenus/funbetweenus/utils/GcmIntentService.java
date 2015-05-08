@@ -86,9 +86,11 @@ public class GcmIntentService extends IntentService {
                         .setContentTitle("GCM Notification")
                         .setStyle(new NotificationCompat.BigTextStyle()
                                 .bigText(msg))
+                        .setVibrate(new long[1])
                         .setContentText(msg);
 
         mBuilder.setContentIntent(contentIntent);
+
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 }

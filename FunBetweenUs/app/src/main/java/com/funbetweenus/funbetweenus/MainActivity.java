@@ -170,6 +170,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i("GCM", "No valid Google Play Services APK found.");
         }
 
+        Log.e("REGID","==================================");
+        Log.e("REGID","" + regid);
+        Log.e("REGID","==================================");
+
+
+
         String greet = "Hello, ";
         try {
             user = getIntent().getExtras().getParcelable("currentUser");
@@ -179,6 +185,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }catch (Exception e){
             e.printStackTrace();
         }
+
+        notifyServerUserMap(regid);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerFrame = (FrameLayout) findViewById(R.id.drawer_frame);
@@ -231,6 +239,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume(){
         super.onResume();
+        checkPlayServices();
+        Location location = getBestLocation();
+        LatLng userLoc = new LatLng(location.getLatitude(), location.getLongitude());
 
     }
 
@@ -327,16 +338,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                     regid = gcm.register(SENDER_ID);
                     msg = "Device registered, registration ID=" + regid;
-
+                    Log.e("REGID","==================================");
+                    Log.e("REGID","" + regid);
+                    Log.e("REGID","==================================");
                     // You should send the registration ID to your server over HTTP,
                     // so it can use GCM/HTTP or CCS to send messages to your app.
                     // The request to your server should be authenticated if your app
                     // is using accounts.
 
-
-                    //TODO:Allow app to notify server of ID and email of user
-                    //UNCOMMENT THIS WHEN APP IS RUNNING!!!!
-                    //notifyServerUserMap(regid);
 
                     // For this demo: we don't need to send it because the device
                     // will send upstream messages to a server that echo back the
@@ -391,20 +400,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void notifyServerUserMap(String regId){
-        try {
-            Bundle data = new Bundle();
-            // the account is used for keeping
-            // track of user notifications
-            data.putString("email", user.getEmail());
-            // the action is used to distinguish
-            // different message types on the server
-            data.putInt("action", Constants.ACTION_REGISTER);
-            String msgId = Integer.toString(getNextMsgId());
-            gcm.send(SENDER_ID + "@gcm.googleapis.com", msgId, data);
-        } catch (IOException e) {
-            Log.e("grokkingandroid",
-                    "IOException while sending registration id", e);
-        }
+        Log.e("REGISTERwServer", "Now registering with server");
+        new AsyncTask(){
+            @Override
+            protected Object doInBackground(Object[] params) {
+                try {
+                    Bundle data = new Bundle();
+                    // the account is used for keeping
+                    // track of user notifications
+                    data.putString("email", user.getEmail());
+                    // the action is used to distinguish
+                    // different message types on the server
+                    data.putString("action", Constants.ACTION_REGISTER);
+                    String msgId = Integer.toString(getNextMsgId());
+                    gcm.send(SENDER_ID + "@gcm.googleapis.com", msgId, data);
+                } catch (IOException e) {
+                    Log.e("grokkingandroid",
+                            "IOException while sending registration id", e);
+                }
+                return null;
+            }
+        }.execute(null, null, null);
+
     }
 
     private int getNextMsgId(){
@@ -636,8 +653,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     placeTextDetails.removeAllViews();
 
                     current.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-                    mMap.animateCamera(CameraUpdateFactory.newLatLng(current.getMarker().getPosition()));
-
+                    current.getMarker().showInfoWindow();
                     RetrievePlaceDetailsTask detailsTask = new RetrievePlaceDetailsTask(MainActivity.this, getString(R.string.google_places_key));
                     detailsTask.execute(current.getId());
                     detailsTask.setMyTaskCompleteListener(new RetrievePlaceDetailsTask.OnTaskComplete() {
@@ -668,6 +684,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     findViewById(R.id.place_scroll_view).setVisibility(View.GONE);
                     findViewById(R.id.place_details_layout).setVisibility(View.VISIBLE);
+                    mMap.animateCamera(CameraUpdateFactory.newLatLng(current.getMarker().getPosition()));
                 }
             });
             ll.addView(ill);
@@ -687,6 +704,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         StringBuilder currentAddress = new StringBuilder("");
         StringBuilder currentPhone = new StringBuilder("");
         StringBuilder currentHours = new StringBuilder("");
+        String rating = null;
         Calendar calendar = Calendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK);
         try {
@@ -696,6 +714,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             currentPhone.append(resultJson.getString("formatted_phone_number"));
             JSONObject hoursObject = resultJson.getJSONObject("opening_hours");
             JSONArray weekdayArray = hoursObject.getJSONArray("weekday_text");
+            rating = resultJson.getString("rating");
             currentHours.append(weekdayArray.get(day-2));
             /*switch (day){
                 case 1: currentHours.append(weekdayObject.getString("Sunday"));
@@ -740,7 +759,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         tv6.setTextColor(Color.BLACK);
         tv6.setGravity(Gravity.LEFT);
         tv6.setPadding(15, 0, 25, 0);
-        tv7.setText("five stars");
+        if(!rating.equals(null)){
+            tv7.setText("Rating: "+ rating +"/5");
+        }else{tv7.setText("No rating available");}
         tv7.setTextSize(12);
         tv7.setTextColor(Color.BLACK);
         tv7.setGravity(Gravity.LEFT);
@@ -767,7 +788,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //TODO: Dynamically change padding for the map to account for changes
 
         if(showScroll){
-            mMap.setPadding(0,120,0,200);
+            mMap.setPadding(0,120,0,300);
         }else{mMap.setPadding(0,600,0,0);}
         fixZoomOverPath();
     }
@@ -829,9 +850,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             double minRadius = mileDistance/12.0;
             //Log.e("PATH DISTANCE", ""+routesToDestination.get(0).getDistance());
             double maxRadius;
-            if(minRadius == 0){
-                minRadius = .1;
-                maxRadius = 2;
+            if(mileDistance < 1){
+                minRadius = 1;
+                maxRadius = 5;
             }else{maxRadius = minRadius+5;}
             setSearchBounds(minRadius, maxRadius);
             setSliderReading();
@@ -1153,6 +1174,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
+        Log.e("MAP_Returned", ""+map.toString());
         LinearLayout mainContainer = (LinearLayout) findViewById(R.id.container);
         int containerHeight = mainContainer.getHeight();
         mMap.setPadding(0, containerHeight+280, 0 ,0);          //Allow 300 dps initial padding to still use "My Location" button
@@ -1375,7 +1397,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         protected String doInBackground(LatLng... params) {
             String baseUrl = "https://maps.googleapis.com/maps/api/directions/json?origin=";
             if(userMarker != null){
-                baseUrl += userMarker.getPosition().latitude + "," + userMarker.getPosition().longitude + "&destination=" + params[0].latitude + "," + params[0].longitude + "&sensor=false";
+                baseUrl += mMap.getMyLocation().getLatitude() + "," + mMap.getMyLocation().getLongitude() + "&destination=" + params[0].latitude + "," + params[0].longitude + "&sensor=false";
             }else{baseUrl += userLoc.latitude + "," + userLoc.longitude + "&destination=" + params[0].latitude + "," + params[0].longitude + "&sensor=false";}
             try{
                 URL url = new URL(baseUrl);

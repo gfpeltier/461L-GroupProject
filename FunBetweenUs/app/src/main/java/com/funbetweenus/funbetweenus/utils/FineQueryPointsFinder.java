@@ -28,12 +28,28 @@ public class FineQueryPointsFinder {
      */
     public ArrayList<LatLng> getQueryPoints(){
         ArrayList<LatLng> queryPoints = new ArrayList<LatLng>();
-        double currentDistance;
-        double pointInterval = mDistance / (NUMQUERYPOINTS + 1);
-        int pointNumber = 1;
-        while(pointNumber < 6){
-            currentDistance = 0.0;
-            double targetDistance = (pointInterval * pointNumber);
+        if(mDistance > 1609){
+            double currentDistance;
+            double pointInterval = mDistance / (NUMQUERYPOINTS + 1);
+            int pointNumber = 1;
+            while(pointNumber < 6){
+                currentDistance = 0.0;
+                double targetDistance = (pointInterval * pointNumber);
+                for(int k = 0; k < path.size() - 2; k++) {
+                    if (currentDistance != mDistance) {
+                        if ((currentDistance + distance(path.get(k).latitude, path.get(k).longitude, path.get(k + 1).latitude, path.get(k + 1).longitude, 'm')) < targetDistance) {
+                            currentDistance += distance(path.get(k).latitude, path.get(k).longitude, path.get(k + 1).latitude, path.get(k + 1).longitude, 'm');
+                        } else {
+                            queryPoints.add(evalQueryPoint(currentDistance, targetDistance, path.get(k), path.get(k + 1)));
+                            currentDistance = mDistance;
+                            pointNumber++;
+                        }
+                    }
+                }
+            }
+        }else{
+            double currentDistance = 0.0;
+            double targetDistance = mDistance/2;
             for(int k = 0; k < path.size() - 2; k++) {
                 if (currentDistance != mDistance) {
                     if ((currentDistance + distance(path.get(k).latitude, path.get(k).longitude, path.get(k + 1).latitude, path.get(k + 1).longitude, 'm')) < targetDistance) {
@@ -41,12 +57,10 @@ public class FineQueryPointsFinder {
                     } else {
                         queryPoints.add(evalQueryPoint(currentDistance, targetDistance, path.get(k), path.get(k + 1)));
                         currentDistance = mDistance;
-                        pointNumber++;
                     }
                 }
             }
         }
-
         return queryPoints;
     }
 

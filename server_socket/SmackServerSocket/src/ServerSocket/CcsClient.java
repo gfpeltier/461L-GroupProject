@@ -36,6 +36,9 @@ import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 import org.xmlpull.v1.XmlPullParser;
 
+import processors.PayloadProcessor;
+import processors.ProcessorFactory;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +79,7 @@ public class CcsClient {
     private String mApiKey = null;
     private String mProjectId = null;
     private boolean mDebuggable = false;
+    public static boolean waitingForRegister = true;
 
     /**
      * XMPP Packet Extension for GCM Cloud Connection Server.
@@ -465,22 +469,27 @@ public class CcsClient {
         final String password = args[1];
         final String toRegId = args[2];
 
-        CcsClient ccsClient = CcsClient.prepareClient(projectId, password, true);
+        
+        CcsClient ccsClient = CcsClient.prepareClient(projectId, password, false);
 
         try {
             ccsClient.connect();
         } catch (XMPPException e) {
             e.printStackTrace();
         }
+        
+        while(waitingForRegister){
+        	
+        }
 
         // Send a sample hello downstream message to a device.
-        String messageId = ccsClient.getRandomMessageId();
+        /*String messageId = ccsClient.getRandomMessageId();
         Map<String, String> payload = new HashMap<String, String>();
-        payload.put("message", "Simple sample sessage");
+        payload.put("message", "Here is some message Grant!!!");
         String collapseKey = "sample";
         Long timeToLive = 10000L;
-        Boolean delayWhileIdle = true;
+        Boolean delayWhileIdle = false;
         ccsClient.send(createJsonMessage(toRegId, messageId, payload, collapseKey,
-                timeToLive, delayWhileIdle));
+                timeToLive, delayWhileIdle));*/
     }
 }

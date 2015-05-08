@@ -1,2 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<qualifiedTypeNameHistroy/>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="processors.ProcessorFactory"/>
+<fullyQualifiedTypeName name="processors.PayloadProcessor"/>
+<fullyQualifiedTypeName name="ServerSocket.CcsClient"/>
+<fullyQualifiedTypeName name="ServerSocket.CcsMessage"/>
+</qualifiedTypeNameHistroy>
