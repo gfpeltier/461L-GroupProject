@@ -15,14 +15,5 @@
         android:layout_marginBottom="4dp"
         android:hint="@string/find_friend"
         android:layout_weight="5"/>
-    <Button
-        android:id="@+id/friend_search_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginBottom="4dp"
-        android:text="@string/friend_search_btn"
-        android:layout_weight="1"/>
 
 </LinearLayout>

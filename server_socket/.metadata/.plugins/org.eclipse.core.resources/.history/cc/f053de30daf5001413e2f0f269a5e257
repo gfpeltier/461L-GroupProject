@@ -1,0 +1,15 @@
+package data;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class Lobby {
+
+	private int id;
+	private User user1;
+	private User user2;
+
+	public Lobby(int mId){
+		id = mId;
+	}
+	
+}

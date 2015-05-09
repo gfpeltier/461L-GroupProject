@@ -17,22 +17,38 @@
 	<section name="BuildPathsPropertyPage">
 		<item value="2" key="pageIndex"/>
 	</section>
+	<section name="FatJarPackageWizard">
+		<item value="/Users/grantpeltier93/Documents/UT_Spring2015/EE461L-SoftwareDesignLab/GroupProject/461L-GroupProject/www/ServerSocket.jar" key="FatJarPackageWizardPage.DESTINATION_PATH_SELECTION"/>
+		<item value="SimpleServerSocket - SimpleServerSocket" key="FatJarPackageWizardPage.LAUNCH_CONFIGURATION_SELECTION_NAME"/>
+		<item value="/Users/grantpeltier93/Documents/UT_Spring2015/EE461L-SoftwareDesignLab/GroupProject/461L-GroupProject/server_socket" key="FatJarPackageWizardPage.ANTSCRIPT_LOCATION"/>
+		<item value="false" key="FatJarPackageWizardPage.ANTSCRIPT_SAVE"/>
+		<item value="2" key="FatJarPackageWizardPage.LIBRARY_HANDLING"/>
+		<list key="FatJarPackageWizardPage.DESTINATION_NAMES_ID">
+			<item value="/Users/grantpeltier93/Documents/UT_Spring2015/EE461L-SoftwareDesignLab/GroupProject/461L-GroupProject/www/ServerSocket.jar"/>
+			<item value="/Users/grantpeltier93/Documents/UT_Spring2015/EE461L-SoftwareDesignLab/GroupProject/461L-GroupProject/www/GCMServerClient.jar"/>
+			<item value="/Users/grantpeltier93/Documents/GCMServerClient.jar"/>
+		</list>
+		<list key="FatJarPackageWizardPage.ANTSCRIPT_LOCATION_HISTORY">
+			<item value="/Users/grantpeltier93/Documents/UT_Spring2015/EE461L-SoftwareDesignLab/GroupProject/461L-GroupProject/server_socket.xml"/>
+			<item value=".xml"/>
+		</list>
+	</section>
 	<section name="RefactoringWizard.preview">
 		<item value="400" key="height"/>
 		<item value="600" key="width"/>
 	</section>
-	<section name="NewClassWizardPage">
-		<item value="false" key="create_constructor"/>
-		<item value="true" key="create_unimplemented"/>
-	</section>
-	<section name="quick_assist_proposal_size">
-	</section>
 	<section name="org.eclipse.ltk.ui.refactoring.settings">
-		<item value="false" key="updateQualifiedNames"/>
 		<item value="*" key="patterns"/>
+		<item value="false" key="updateQualifiedNames"/>
 		<item value="1" key="updateSimilarElementsMatchStrategy"/>
 		<item value="false" key="updateTextualMatches"/>
 		<item value="false" key="updateSimilarElements"/>
+	</section>
+	<section name="quick_assist_proposal_size">
+	</section>
+	<section name="NewClassWizardPage">
+		<item value="false" key="create_constructor"/>
+		<item value="true" key="create_unimplemented"/>
 	</section>
 	<section name="ClasspathContainerSelectionPage">
 		<item value="7" key="index"/>

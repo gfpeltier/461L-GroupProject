@@ -1,0 +1,11 @@
+package data;
+
+public class LobbyManager {
+	private final static LobbyManager instance = new LobbyManager();
+	
+	private LobbyManager(){}
+	
+	public LobbyManager getInstance(){
+		return instance;
+	}
+}

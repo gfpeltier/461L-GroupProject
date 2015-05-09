@@ -60,10 +60,11 @@ public class GcmIntentService extends IntentService {
                     } catch (InterruptedException e) {
                     }
                 }
-                Log.i("GCM", "Completed work @ " + SystemClock.elapsedRealtime());
+                Log.e("GCM", "Completed work @ " + SystemClock.elapsedRealtime());
                 // Post notification of received message.
-                sendNotification("Received: " + extras.toString());
-                Log.i("GCM", "Received: " + extras.toString());
+
+                sendNotification(extras.toString());
+                Log.e("GCM_GOT_BACK", "Received: " + extras.toString());
             }
         }
         // Release the wake lock provided by the WakefulBroadcastReceiver.
@@ -74,6 +75,9 @@ public class GcmIntentService extends IntentService {
     // This is just one simple example of what you might choose to do with
     // a GCM message.
     private void sendNotification(String msg) {
+
+
+
         mNotificationManager = (NotificationManager)
                 this.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -82,7 +86,7 @@ public class GcmIntentService extends IntentService {
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.common_ic_googleplayservices)
+                        .setSmallIcon(R.drawable.ufuns)
                         .setContentTitle("GCM Notification")
                         .setStyle(new NotificationCompat.BigTextStyle()
                                 .bigText(msg))

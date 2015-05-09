@@ -1,0 +1,28 @@
+package data;
+
+public class User {
+	
+	private String name;
+	private String id;
+	private int lobby;
+	private double locLat;
+	private double locLng;
+	
+	public User(String mName, String mId){
+		name = mName;
+		id = mId;
+	}
+	
+	public void setLobby(int lob){
+		lobby = lob;
+	}
+	
+	public void setLat(double mLat){
+		locLat = mLat;
+	}
+	
+	public void setLng(double mLng){
+		locLng = mLng;
+	}
+
+}

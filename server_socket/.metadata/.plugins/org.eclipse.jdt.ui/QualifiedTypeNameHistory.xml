@@ -2,6 +2,22 @@
 <qualifiedTypeNameHistroy>
 <fullyQualifiedTypeName name="processors.ProcessorFactory"/>
 <fullyQualifiedTypeName name="processors.PayloadProcessor"/>
-<fullyQualifiedTypeName name="ServerSocket.CcsClient"/>
 <fullyQualifiedTypeName name="ServerSocket.CcsMessage"/>
+<fullyQualifiedTypeName name="ServerSocket.CcsClient"/>
+<fullyQualifiedTypeName name="java.util.Map"/>
+<fullyQualifiedTypeName name="java.util.HashMap"/>
+<fullyQualifiedTypeName name="java.util.logging.Level"/>
+<fullyQualifiedTypeName name="java.util.concurrent.atomic.AtomicInteger"/>
+<fullyQualifiedTypeName name="java.util.ArrayList"/>
+<fullyQualifiedTypeName name="java.util.List"/>
+<fullyQualifiedTypeName name="java.util.Collections"/>
+<fullyQualifiedTypeName name="java.util.Iterator"/>
+<fullyQualifiedTypeName name="org.json.JSONException"/>
+<fullyQualifiedTypeName name="org.json.JSONObject"/>
+<fullyQualifiedTypeName name="java.net.Socket"/>
+<fullyQualifiedTypeName name="data.Constants"/>
+<fullyQualifiedTypeName name="data.User"/>
+<fullyQualifiedTypeName name="data.LobbyManager"/>
+<fullyQualifiedTypeName name="java.io.BufferedWriter"/>
+<fullyQualifiedTypeName name="java.io.OutputStreamWriter"/>
 </qualifiedTypeNameHistroy>

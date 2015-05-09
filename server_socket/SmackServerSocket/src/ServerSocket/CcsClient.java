@@ -266,7 +266,7 @@ public class CcsClient {
      */
     public void handleNackReceipt(Map<String, Object> jsonObject) {
         String messageId = jsonObject.get("message_id").toString();
-        String from = jsonObject.get("from").toString();
+        String from = jsonObject.get("to").toString();
         logger.log(Level.INFO, "handleNackReceipt() from: " + from + ", messageId: " + messageId);
     }
 
@@ -449,6 +449,8 @@ public class CcsClient {
             }
             catch (Exception e) {
                 // Send NACK to CCS
+            	logger.log(Level.SEVERE, "Handle message problem: " + e.toString());
+            	e.printStackTrace();
                 String nack = createJsonNack(msg.getFrom(), msg.getMessageId());
                 send(nack);
             }
@@ -467,7 +469,7 @@ public class CcsClient {
     public static void main(String[] args) {
         final String projectId = args[0];
         final String password = args[1];
-        final String toRegId = args[2];
+        //final String toRegId = args[2];
 
         
         CcsClient ccsClient = CcsClient.prepareClient(projectId, password, false);
@@ -478,9 +480,7 @@ public class CcsClient {
             e.printStackTrace();
         }
         
-        while(waitingForRegister){
-        	
-        }
+        
 
         // Send a sample hello downstream message to a device.
         /*String messageId = ccsClient.getRandomMessageId();
@@ -491,5 +491,10 @@ public class CcsClient {
         Boolean delayWhileIdle = false;
         ccsClient.send(createJsonMessage(toRegId, messageId, payload, collapseKey,
                 timeToLive, delayWhileIdle));*/
+        
+        while(waitingForRegister){
+        	
+        }
+        
     }
 }

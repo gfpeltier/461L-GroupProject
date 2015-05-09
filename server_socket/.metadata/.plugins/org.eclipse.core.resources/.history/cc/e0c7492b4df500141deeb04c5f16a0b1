@@ -1,0 +1,13 @@
+package processors;
+
+import ServerSocket.CcsMessage;
+
+public class UserSearchProcessor implements PayloadProcessor{
+
+	@Override
+	public void handleMessage(CcsMessage msg) {
+		
+		
+	}
+
+}

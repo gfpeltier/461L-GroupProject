@@ -4,6 +4,7 @@ import android.content.Intent;
 
 import com.funbetweenus.funbetweenus.User;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 
 import java.util.Date;
 
@@ -18,6 +19,11 @@ public class Gem {
     private int userId;
     private int id;
     private Date date;
+    private Marker marker;
+
+
+
+
 
 
     public Gem(LatLng location, User user) {
@@ -33,6 +39,14 @@ public class Gem {
         this.userId = userId;
         this.id = id;
         this.date = date;
+    }
+
+    public Gem(LatLng location, String title, String description, int userId, int id) {
+        this.location = location;
+        this.title = title;
+        this.description = description;
+        this.userId = userId;
+        this.id = id;
     }
 
 
@@ -80,6 +94,15 @@ public class Gem {
         this.id = id;
     }
 
+    public Marker getMarker() {
+        return marker;
+    }
+
+    public void setMarker(Marker marker) {
+        this.marker = marker;
+    }
+
+
 
     @Override
     public String toString(){
@@ -88,6 +111,13 @@ public class Gem {
                 ", title: " + title +
                 ", desc: " + description +
                 ", user: " + userId;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(!(o instanceof Gem)){return false;}
+        Gem g = (Gem) o;
+        return this.id == g.getId();
     }
 
 }

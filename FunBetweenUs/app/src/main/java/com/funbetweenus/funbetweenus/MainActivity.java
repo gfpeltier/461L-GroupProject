@@ -1,5 +1,6 @@
 package com.funbetweenus.funbetweenus;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -9,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -18,6 +18,9 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.os.Bundle;
@@ -57,19 +60,22 @@ import com.funbetweenus.funbetweenus.data.DirectionsStep;
 import com.funbetweenus.funbetweenus.data.Gem;
 import com.funbetweenus.funbetweenus.data.Place;
 import com.funbetweenus.funbetweenus.utils.FineQueryPointsFinder;
-import com.funbetweenus.funbetweenus.utils.PointsAlgorithm;
+import com.funbetweenus.funbetweenus.utils.RetrieveBackEndDataTask;
+import com.funbetweenus.funbetweenus.utils.RetrievePathGemsTask;
 import com.funbetweenus.funbetweenus.utils.RetrievePlaceDetailsTask;
 import com.funbetweenus.funbetweenus.utils.RetrievePlacePhotoTask;
 import com.funbetweenus.funbetweenus.utils.RetrievePlacesDataTask;
 import com.funbetweenus.funbetweenus.utils.SubmitGemTask;
+//import com.github.nkzawa.emitter.Emitter;
+//import com.github.nkzawa.socketio.client.IO;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.Result;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -78,18 +84,27 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.sql.Date;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -133,11 +148,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private ArrayList<DirectionsRoute> routesToDestination;
     private ArrayList<Place> placeResults;
+    private ArrayList<Gem> gemResults;
     private List<LatLng> directionsPathPoints;
     private Polyline fullPath;
     private boolean viewPathState;
     private double lowLimitSearchRadius;
     private double highLimitSearchRadius;
+
+
+    private Socket socket;
+    private SocketThread socketThread;
 
 
     GoogleCloudMessaging gcm;
@@ -187,6 +207,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         notifyServerUserMap(regid);
+        //connectToServer();
+        socketThread = new SocketThread(new OnMessageReceived() {
+            @Override
+            public void messageReceived(String message) {
+                evaluateServerMessage(message);
+            }
+        });
+
+        socketThread.registerAndRun();
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerFrame = (FrameLayout) findViewById(R.id.drawer_frame);
@@ -245,6 +274,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+
+    private void evaluateServerMessage(String msg){}
 
     /**
      * Check the device to make sure it has the Google Play Services APK. If
@@ -422,6 +453,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }.execute(null, null, null);
 
+
     }
 
     private int getNextMsgId(){
@@ -498,6 +530,60 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             LayoutInflater inflater = getLayoutInflater();
             builder.setView(inflater.inflate(R.layout.dialog_find_friend, null))
                 .setTitle(getString(R.string.find_friend_dialog_title))
+                .setPositiveButton(R.string.search, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Dialog d = (Dialog) dialog;
+                        EditText friendEmailEdit = (EditText) d.findViewById(R.id.friend_email_edit);
+                        final String fEmail = friendEmailEdit.getText().toString().trim();
+                        if(!fEmail.equals(null) && !fEmail.equals("") && fEmail.contains("@")){
+                            /*new AsyncTask(){
+
+                                @Override
+                                protected Object doInBackground(Object[] params) {
+                                    try {
+                                        Bundle data = new Bundle();
+                                        // the account is used for keeping
+                                        // track of user notifications
+                                        data.putString("email", fEmail);
+                                        data.putString("fromName", user.getName());
+                                        // the action is used to distinguish
+                                        // different message types on the server
+                                        data.putString("action", Constants.ACTION_USER_SEARCH);
+                                        String msgId = Integer.toString(getNextMsgId());
+                                        gcm.send(SENDER_ID + "@gcm.googleapis.com", msgId, data);
+                                    } catch (IOException e) {
+                                        Log.e("grokkingandroid",
+                                                "IOException while sending user email", e);
+                                    }
+                                    return null;
+                                }
+                            }.execute(null, null, null);*/
+                            try{
+                                JSONObject obj = new JSONObject();
+                                obj.put("action", Constants.ACTION_USER_SEARCH);
+                                obj.put("requester",user.getEmail());
+                                obj.put("friend_email", fEmail);
+                                socketThread.send(obj.toString());
+                            }catch (JSONException e){
+                                Log.e("SENDEMAILEXCEPTION", e.toString());
+                            }
+                            d.dismiss();
+                            AlertDialog.Builder builder = new AlertDialog.Builder(mainCon);
+                            LayoutInflater inflater = getLayoutInflater();
+                            builder.setView(inflater.inflate(R.layout.dialog_wait_for_friend, null))
+                                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+
+                                        }
+                                    });
+                            //TODO:Need to open a waiting dialog to wait for response from server.
+                        }else{
+                            showToast("Please enter a valid email address first!");
+                        }
+                    }
+                })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
@@ -513,6 +599,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    /**
+     * On click listener for "Find the Fun" button. Does proper places search depending on category and passes control
+     * to functions for JSON parsing and UI presentation of results.
+     * @param view
+     */
     public void findFunListener(View view){
         //ArrayList<LatLng> queryPoints = new PointsAlgorithm().getPoints(routesToDestination.get(0));
         ArrayList<LatLng> queryPoints = new FineQueryPointsFinder(routesToDestination.get(0).getDistance(), directionsPathPoints).getQueryPoints();
@@ -564,16 +655,108 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 });
                 break;
             case "Gems":
-                while (i.hasNext()){
-                    LatLng next = i.next();
-                    //TODO: Need to implement something else for gems
-                }
+                RetrievePathGemsTask gemSearch = new RetrievePathGemsTask(this, queryPoints);
+                gemSearch.execute(String.valueOf(radius));
+                gemSearch.setMyTaskCompleteListener(new RetrievePathGemsTask.OnTaskComplete() {
+                    @Override
+                    public void setMyTaskComplete(ArrayList<String> message) {
+                        parsePathPlaceGems(message);
+                    }
+                });
                 break;
             case "Out N About":
                 showToast("This category is not yet supported");
                 break;
         }
     }
+
+
+    private void populateScrollGems(){
+
+    }
+
+
+    private void parsePlaceGems(String json){
+        gemResults = new ArrayList<Gem>();
+        String code = null;
+        try{
+            JSONObject queryResult = new JSONObject(json);
+            code = queryResult.getString("code");
+            if(code.equals("success")){
+                JSONArray jsonGems = queryResult.getJSONArray("object");
+                for(int k = 0; k < jsonGems.length(); k++){
+                    JSONObject singleResult = jsonGems.getJSONObject(k);
+                    LatLng loc = new LatLng(Double.parseDouble(singleResult.getString("latitude")), Double.parseDouble(singleResult.getString("longitude")));
+                    String title = singleResult.getString("title");
+                    String description = singleResult.getString("description");
+                    int id = Integer.parseInt(singleResult.getString("id"));
+                    int userId = Integer.parseInt(singleResult.getString("user"));
+                    //Date date = Date.valueOf(singleResult.getString("date"));
+                    Gem newGem = new Gem(loc, title, description, userId, id);
+                    if(!gemResults.contains(newGem)){
+                        Marker mark = mMap.addMarker(new MarkerOptions()
+                                .title(newGem.getTitle())
+                                .snippet(newGem.getDescription())
+                                .position(newGem.getLocation()));
+                        newGem.setMarker(mark);
+                        gemResults.add(newGem);
+                    }
+                }
+                fixZoomOverGems();
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+        if(!(code == null) && code.equals("success")){
+            populateScrollGems();		//This is some method you can create to populate the srollable places view with Gem data. Similar to an existing one for places
+        }else{
+            showToast("Uh Oh... we weren't able to find and gems");
+        }
+    }
+
+
+    private void parsePathPlaceGems(ArrayList<String> results){
+        gemResults = new ArrayList<Gem>();
+        Iterator<String> i = results.iterator();
+        while(i.hasNext()){
+            String queryResultStr = i.next();
+            String code = null;
+            try{
+                JSONObject queryResult = new JSONObject(queryResultStr);
+                code = queryResult.getString("code");
+                if(code.equals("success")){
+                    JSONArray jsonGems = queryResult.getJSONArray("object");
+                    for(int k = 0; k < jsonGems.length(); k++){
+                        JSONObject singleResult = jsonGems.getJSONObject(k);
+                        LatLng loc = new LatLng(Double.parseDouble(singleResult.getString("latitude")), Double.parseDouble(singleResult.getString("longitude")));
+                        String title = singleResult.getString("title");
+                        String description = singleResult.getString("description");
+                        int id = Integer.parseInt(singleResult.getString("id"));
+                        int userId = Integer.parseInt(singleResult.getString("user"));
+                        //Date date = Date.valueOf(singleResult.getString("date"));
+                        Gem newGem = new Gem(loc, title, description, userId, id);
+                        if(!gemResults.contains(newGem)){
+                            Marker mark = mMap.addMarker(new MarkerOptions()
+                                    .title(newGem.getTitle())
+                                    .snippet(newGem.getDescription())
+                                    .position(newGem.getLocation()));
+                            newGem.setMarker(mark);
+                            gemResults.add(newGem);
+                        }
+                    }
+                    fixZoomOverGems();
+                }
+            }catch(JSONException e){
+                e.printStackTrace();
+            }
+            if(!(code == null) && code.equals("success")){
+                populateScrollGems();		//This is some method you can create to populate the srollable places view with Gem data. Similar to an existing one for places
+            }else{
+                showToast("Uh Oh... all or part of your path doesn't contain any gems");
+            }
+        }
+    }
+
 
 
     private void parsePlaceJSON(ArrayList<String> results){
@@ -810,6 +993,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    private void fixZoomOverGems(){
+        LatLngBounds.Builder bc = new LatLngBounds.Builder();
+        for(Gem gem : gemResults){
+            bc.include(gem.getLocation());
+        }
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bc.build(), 50));
+    }
+
+
     private void fixZoomOverPath(){
         List<LatLng> points = fullPath.getPoints(); // route is instance of PolylineOptions
         LatLngBounds.Builder bc = new LatLngBounds.Builder();
@@ -839,7 +1031,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }*/
 
     private void findRadiusViewState(boolean radiusUI){
-        findViewById(R.id.user_search_area).setVisibility(radiusUI ? View.GONE:View.VISIBLE);
+        findViewById(R.id.user_search_area).setVisibility(radiusUI ? View.GONE : View.VISIBLE);
         findViewById(R.id.radius_group).setVisibility(radiusUI ? View.VISIBLE:View.GONE);
         //LinearLayout mainContainer = (LinearLayout) findViewById(R.id.container);
         //int containerHeight = mainContainer.getHeight();
@@ -1202,6 +1394,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+
+    private class DrawerItemClickListener implements ListView.OnItemClickListener{
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            selectItem(position);
+        }
+    }
+
     private void selectItem(int pos){
         Log.e("NavTableSelect", "" + pos);
         switch (pos){
@@ -1211,13 +1412,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 placeGem = true;
                 showToast("Tap on the map where you would like to place a Gem!");
                 break;
-            case 1:                 // Sign Out
+            case 1:                 // See all Gems
+                Log.e("NavTable", "Looking for user Gems");
+                mMap.clear();
+                mDrawerLayout.closeDrawer(mDrawerFrame);
+                RetrieveBackEndDataTask getAllGems = new RetrieveBackEndDataTask(getApplicationContext());
+                getAllGems.execute("findGem.php","uid=" + user.getUfunsId());
+                getAllGems.setMyTaskCompleteListener(new RetrieveBackEndDataTask.OnTaskComplete() {
+                    @Override
+                    public void setMyTaskComplete(String message) {
+                        parsePlaceGems(message);
+                    }
+                });
+                break;
+            case 2:                 // Sign Out
                 Log.e("NavTable", "Sign Out attempted");
                 Intent logoutIntent = new Intent(MainActivity.this, LoginActivity.class);
                 logoutIntent.putExtra("fromMain",true);
                 startActivity(logoutIntent);
                 break;
-            case 2:                 // Settings
+            case 3:                 // Settings
                 Log.e("NavTable", "Settings view attempted");
                 showToast("Settings feature not yet ready");
                 break;
@@ -1232,6 +1446,80 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         Context context = getApplicationContext();
         Toast toast = Toast.makeText(context, msg, Toast.LENGTH_SHORT);
         toast.show();
+    }
+
+    private void connectToServer(){
+        new AsyncTask(){
+
+            @Override
+            protected Void doInBackground(Object... params) {
+
+
+                /*try {
+                    socket = IO.socket("http://" + getString(R.string.serverIPAddress) + ":4444");
+                    socket.on(com.github.nkzawa.engineio.client.Socket.EVENT_OPEN, new Emitter.Listener() {
+                        @Override
+                        public void call(Object... args) {
+                            try {
+                                JSONObject obj = new JSONObject();
+                                obj.put("action", Constants.ACTION_REGISTER);
+                                obj.put("name", user.getName());
+                                obj.put("email", user.getEmail());
+                                obj.put("id", user.getId());
+                                Log.e("SocketConn", "" + obj.toString());
+                                socket.send(obj.toString());
+                            } catch (JSONException e){
+                                e.printStackTrace();
+                                Log.e("SocketConn",""+e.toString());
+                            }
+                        }
+                    });
+                    socket.open();
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                    Log.e("SocketConn",""+e.toString());
+                }*/
+
+                if(socket == null || !socket.isConnected()){
+                    socket = new Socket();
+                    while(!socket.isConnected()){
+                        try{
+                            Thread.sleep(5000);
+                            SocketAddress address = new InetSocketAddress(getString(R.string.serverIPAddress), 4444);
+                            socket.connect(address, 5000);
+                        }catch(IOException e){
+                            Log.e("SocketConn", "Can't connect to socket. Reconnecting...");
+                            Log.e("SocketConn", e.toString());
+                            socket=new Socket(); //recreate socket (if connection failed)
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        continue;
+                    }
+                }
+                Log.e("SocketConn", "Socket is connected");
+                try {
+                    OutputStreamWriter os = new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8);
+                    JSONObject obj = new JSONObject();
+                    obj.put("action", Constants.ACTION_REGISTER);
+                    obj.put("name", user.getName());
+                    obj.put("email", user.getEmail());
+                    obj.put("id", user.getId());
+                    Log.e("SocketConn", "" + obj.toString());
+                    os.write(obj.toString());
+                    os.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.e("SocketConn",""+e.toString());
+                } catch (JSONException e){
+                    e.printStackTrace();
+                    Log.e("SocketConn",""+e.toString());
+                }
+                return null;
+            }
+
+    }.execute(null,null,null);
+
     }
 
     @Override
@@ -1340,13 +1628,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private class DrawerItemClickListener implements ListView.OnItemClickListener{
 
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            selectItem(position);
-        }
-    }
+
+
 
     private class GeocodeTask extends AsyncTask<String, Void, List<Address>>{
 
@@ -1444,6 +1728,158 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    private class SocketThread implements Runnable{
+
+        Thread thread;
+        public static final int SERVERPORT = 4444;
+        private OnMessageReceived mMessageListener = null;
+        private boolean mRun = false;
+
+        private boolean waitForRegister = true;
+
+        BufferedReader in;
+        BufferedWriter os;
+
+
+
+        public SocketThread(OnMessageReceived onMessageReceived){
+            mMessageListener = onMessageReceived;
+        }
+
+        public void stopClient(){
+            mRun = false;
+        }
+
+
+        public void registerAndRun(){
+            new AsyncTask(){
+
+                @Override
+                protected String doInBackground(Object... params) {
+
+                    if(socket == null || !socket.isConnected()){
+                        socket = new Socket();
+                        while(!socket.isConnected()){
+                            try{
+                                Thread.sleep(5000);
+                                SocketAddress address = new InetSocketAddress(getString(R.string.serverIPAddress), 4444);
+                                socket.connect(address, 5000);
+                            }catch(IOException e){
+                                Log.e("SocketConn", "Can't connect to socket. Reconnecting...");
+                                Log.e("SocketConn", e.toString());
+                                socket=new Socket(); //recreate socket (if connection failed)
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            continue;
+                        }
+                    }
+                    Log.e("SocketConn", "Socket is connected");
+                    try {
+                        OutputStreamWriter os = new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8);
+                        JSONObject obj = new JSONObject();
+                        obj.put("action", Constants.ACTION_REGISTER);
+                        obj.put("name", user.getName());
+                        obj.put("email", user.getEmail());
+                        obj.put("id", user.getId());
+                        Log.e("SocketConn", "" + obj.toString());
+                        os.write(obj.toString());
+                        os.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.e("SocketConn",""+e.toString());
+                    } catch (JSONException e){
+                        e.printStackTrace();
+                        Log.e("SocketConn",""+e.toString());
+                    }
+                    waitForRegister = false;
+                    return null;
+                }
+
+            }.execute(null,null,null);
+        }
+
+
+        public void send(String msg){
+            if(socket == null || !socket.isConnected()){
+                socket = new Socket();
+                while(!socket.isConnected()){
+                    try{
+                        Thread.sleep(5000);
+                        SocketAddress address = new InetSocketAddress(getString(R.string.serverIPAddress), 4444);
+                        socket.connect(address, 5000);
+                    }catch(IOException e){
+                        Log.e("SocketConn", "Can't connect to socket. Reconnecting...");
+                        Log.e("SocketConn", e.toString());
+                        socket=new Socket(); //recreate socket (if connection failed)
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
+            }
+            try {
+                os = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                os.write(msg);
+                os.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void run() {
+
+            mRun = true;
+
+            while(waitForRegister){}
+
+            // Moves the current Thread into the background
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+            thread = Thread.currentThread();
+
+            while(mRun){
+
+                if(socket == null || !socket.isConnected()){
+                    socket = new Socket();
+                    while(!socket.isConnected()){
+                        try{
+                            Thread.sleep(5000);
+                            SocketAddress address = new InetSocketAddress(getString(R.string.serverIPAddress), 4444);
+                            socket.connect(address, 5000);
+                        }catch(IOException e){
+                            Log.e("SocketConn", "Can't connect to socket. Reconnecting...");
+                            Log.e("SocketConnRunnable", e.toString());
+                            socket=new Socket(); //recreate socket (if connection failed)
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        continue;
+                    }
+                }
+
+
+                try {
+                    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    String serverMessage = in.readLine();
+                    if (serverMessage != null && mMessageListener != null) {
+                        //call the method messageReceived from MyActivity class
+                        Log.e("SocketConn", serverMessage);
+                        mMessageListener.messageReceived(serverMessage);
+                    }
+                    serverMessage = null;
+                } catch (IOException e) {
+                    Log.e("SocketConnRunnable", e.toString());
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
+    public interface OnMessageReceived {
+        public void messageReceived(String message);
+    }
 
 }
 

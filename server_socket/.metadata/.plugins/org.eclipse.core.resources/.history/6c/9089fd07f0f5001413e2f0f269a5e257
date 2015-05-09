@@ -1,0 +1,80 @@
+package SimpleSocket;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import data.Constants;
+import data.LobbyManager;
+import data.User;
+
+public class SimpleServerSocket {
+	
+	public static final Logger logger = Logger.getLogger(SimpleServerSocket.class.getName());
+	
+	private static ServerSocket serverSocket;
+	private static Socket clientSocket;
+	private static InputStreamReader inputStreamReader;
+	private static BufferedReader bufferedReader;
+	private static String message;
+ 
+	public static void main(String[] args) {
+		
+		try {
+			serverSocket = new ServerSocket(4444);
+ 
+		} catch (IOException e) {
+			System.out.println("Could not listen on port: 4444");
+		}
+ 
+		logger.log(Level.INFO, "Server started. Listening to the port 4444");
+ 
+		while (true) {
+			try {
+ 
+				clientSocket = serverSocket.accept(); // accept the client connection
+				inputStreamReader = new InputStreamReader(clientSocket.getInputStream());
+				bufferedReader = new BufferedReader(inputStreamReader); // get the client message
+				message = bufferedReader.readLine();
+				logger.log(Level.INFO, message);
+				JSONObject obj = new JSONObject(message);
+				
+				String action = obj.getString("action");
+				
+				if(action.equals(Constants.ACTION_REGISTER)){
+					String name = obj.getString("name");
+					String email = obj.getString("email");
+					String uid = obj.getString("id");
+					User newUser = new User(name, email, uid, clientSocket);
+					LobbyManager.getInstance().registerUser(newUser);
+					logger.log(Level.INFO, "REGISTERING new user with id: " + uid);
+				}else if(action.equals(Constants.ACTION_UNREGISTER)){
+					String uid = obj.getString("id");
+					LobbyManager.getInstance().unregisterUser(uid);
+				}
+				
+				
+ 
+				
+				inputStreamReader.close();
+				//clientSocket.close();
+ 
+				clientSocket.setKeepAlive(true);
+				
+				
+			} catch (IOException ex) {
+				System.out.println("Problem in message reading");
+			} catch(JSONException e){
+				logger.log(Level.SEVERE, "EXCEPTION while parsing: " + e.toString());
+			}
+		}
+ 
+	}
+}

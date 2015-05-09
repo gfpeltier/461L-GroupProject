@@ -1,0 +1,52 @@
+package processors;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+
+import ServerSocket.CcsClient;
+import ServerSocket.CcsMessage;
+
+public class UserSearchProcessor implements PayloadProcessor{
+
+	@Override
+	public void handleMessage(CcsMessage msg) {
+		PseudoDao dao = PseudoDao.getInstance();
+		String search = msg.getPayload().get("email");
+		if(!dao.getAllRegistrationIdsForAccount(search).isEmpty()){
+			CcsClient client = CcsClient.getInstance();
+	        String msgId = dao.getUniqueMessageId();
+	        Map<String, String> newPayload = new HashMap<String, String>();
+	        newPayload.put("result", "user_found");
+	        String jsonRequest = 
+	                CcsClient.createJsonMessage(
+	                        msg.getFrom(), 
+	                        msgId, 
+	                        newPayload, 
+	                        null, 
+	                        null, // TTL (null -> default-TTL) 
+	                        false);
+	        client.send(jsonRequest);
+	        client.logger.log(Level.INFO, "Successful find: " + jsonRequest);
+	        //TODO: Need to send notification to other user as well.
+		}else{
+			CcsClient client = CcsClient.getInstance();
+	        String msgId = dao.getUniqueMessageId();
+	        Map<String, String> newPayload = new HashMap<String, String>();
+	        newPayload.put("result", "no_match");
+	        String jsonRequest = 
+	                CcsClient.createJsonMessage(
+	                        msg.getFrom(), 
+	                        msgId, 
+	                        newPayload, 
+	                        null, 
+	                        null, // TTL (null -> default-TTL) 
+	                        false);
+	        client.send(jsonRequest);
+		}
+        
+		
+	}
+
+}

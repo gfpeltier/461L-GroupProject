@@ -1,0 +1,16 @@
+package data;
+
+public class User {
+	
+	private String name;
+	private String id;
+	private int lobby;
+	private double locLat;
+	private double locLng;
+	
+	public User(String mName, String mId){
+		name = mName;
+		id = mId;
+	}
+
+}

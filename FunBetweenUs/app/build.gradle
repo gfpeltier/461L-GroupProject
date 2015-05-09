@@ -45,6 +45,7 @@ dependencies {
     compile files('src/main/httpclient-4.4.1.jar')
     compile files('src/main/org.apache.commons.io-2.4.jar')
     compile files('src/main/commons-io-2.4.jar')
+    compile 'com.github.nkzawa:socket.io-client:0.3.0'
     testCompile 'junit:junit:4.12'
     testCompile "org.mockito:mockito-core:1.9.5"
 
