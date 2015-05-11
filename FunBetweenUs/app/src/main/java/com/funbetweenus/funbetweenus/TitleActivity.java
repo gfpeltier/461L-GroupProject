@@ -1,7 +1,10 @@
 package com.funbetweenus.funbetweenus;
 
+import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
@@ -9,6 +12,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
+import android.widget.Toast;
 
 import com.funbetweenus.funbetweenus.utils.OnTaskCompleted;
 
@@ -24,20 +28,46 @@ import java.net.URLEncoder;
 
 public class TitleActivity extends ActionBarActivity implements OnTaskCompleted {
 
+    public static Toast myToast;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         supportRequestWindowFeature(Window.FEATURE_ACTION_BAR);
         getSupportActionBar().hide();
 
         setContentView(R.layout.activity_title);
 
+        myToast = Toast.makeText(getApplicationContext(), "Please enable Data and Location.", Toast.LENGTH_SHORT);
 
         /**
          * Showing splashscreen while making network calls to download necessary
          * data before launching the app Will use AsyncTask to make http call
          */
         new PrefetchData(this).execute();
+    }
+
+    public void waitDataGPS(){
+        LocationManager lm = null;
+        boolean gps_enabled = false,network_enabled = false;
+
+        int counter = 0;
+       while(!gps_enabled&&!network_enabled){
+            if(lm==null)
+                lm = (LocationManager) getApplicationContext().getSystemService(getApplicationContext().LOCATION_SERVICE);
+            try{
+                gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            }catch(Exception ex){}
+            try{
+                network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            }catch(Exception ex){}
+           if(counter==999){
+               myToast.show();
+               counter = 0;
+           }
+           counter++;
+        }
+
     }
 
     @Override
@@ -118,11 +148,12 @@ public class TitleActivity extends ActionBarActivity implements OnTaskCompleted 
             // before making http calls
             telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
             deviceId = telephonyManager.getDeviceId();
-
         }
 
         @Override
         protected String doInBackground(Void... arg0) {
+            waitDataGPS();
+
             /*
              * Will make http call here This call will download required data
              * before launching the app

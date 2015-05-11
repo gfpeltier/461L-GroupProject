@@ -76,6 +76,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -122,6 +123,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private FrameLayout mDrawerFrame;
+    private ArrayList<Marker> mMarkers = new ArrayList<Marker>();
+    private ArrayList<Marker> gemMarkers = new ArrayList<Marker>();
 
     private static final int MESSAGE_TEXT_CHANGED = 0;
     private static final int AUTOCOMPLETE_DELAY = 500;
@@ -207,7 +210,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         notifyServerUserMap(regid);
-        //connectToServer();
+       /* //connectToServer();
         socketThread = new SocketThread(new OnMessageReceived() {
             @Override
             public void messageReceived(String message) {
@@ -216,7 +219,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         socketThread.registerAndRun();
-
+*/
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerFrame = (FrameLayout) findViewById(R.id.drawer_frame);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
@@ -494,7 +497,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 double realVal = evaluateRealRadius(progress);
                 DecimalFormat df = new DecimalFormat("####0.00");
                 //Log.e("ProgressChanged", ""+df.format(realVal));
-                reading.setText(df.format(realVal)+"mi");
+                reading.setText(df.format(realVal) + "mi");
             }
 
             @Override
@@ -523,7 +526,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void onToggleClicked(View view){
         boolean on = ((ToggleButton) view).isChecked();
-        Log.e("ToggleMode","Toggling user mode");
+        Log.e("ToggleMode", "Toggling user mode");
         if(on){
             Log.e("User Mode On", "Find a friend mode");
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -613,6 +616,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         String category = categorySpinner.getSelectedItem().toString();
         RetrievePlacesDataTask search = new RetrievePlacesDataTask(this,getString(R.string.google_places_key), queryPoints);
         Iterator<LatLng> i = queryPoints.iterator();
+
+        if(!mMarkers.isEmpty()){
+            for (Marker marker: mMarkers) {
+                marker.remove();
+             }
+        mMarkers.clear();
+        }
+        if(!gemMarkers.isEmpty()){
+            for (Marker marker: gemMarkers) {
+                marker.remove();
+            }
+            gemMarkers.clear();
+        }
+
         switch(category){
             case "Restaurants":
                 search.execute(String.valueOf(radius), "restaurant");
@@ -695,10 +712,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     Gem newGem = new Gem(loc, title, description, userId, id);
                     if(!gemResults.contains(newGem)){
                         Marker mark = mMap.addMarker(new MarkerOptions()
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.gem))
                                 .title(newGem.getTitle())
                                 .snippet(newGem.getDescription())
                                 .position(newGem.getLocation()));
                         newGem.setMarker(mark);
+                        gemMarkers.add(mark);
                         gemResults.add(newGem);
                     }
                 }
@@ -709,8 +728,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
         if(!(code == null) && code.equals("success")){
             populateScrollGems();		//This is some method you can create to populate the srollable places view with Gem data. Similar to an existing one for places
-        }else{
+        }else if(gemMarkers.isEmpty()){
             showToast("Uh Oh... we weren't able to find and gems");
+            gemMarkers.clear();
         }
     }
 
@@ -737,11 +757,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         Gem newGem = new Gem(loc, title, description, userId, id);
                         if(!gemResults.contains(newGem)){
                             Marker mark = mMap.addMarker(new MarkerOptions()
+                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.gem))
                                     .title(newGem.getTitle())
                                     .snippet(newGem.getDescription())
                                     .position(newGem.getLocation()));
                             newGem.setMarker(mark);
                             gemResults.add(newGem);
+                            gemMarkers.add(mark);
                         }
                     }
                     fixZoomOverGems();
@@ -751,7 +773,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
             if(!(code == null) && code.equals("success")){
                 populateScrollGems();		//This is some method you can create to populate the srollable places view with Gem data. Similar to an existing one for places
-            }else{
+            }else if(gemMarkers.isEmpty()){
                 showToast("Uh Oh... all or part of your path doesn't contain any gems");
             }
         }
@@ -760,7 +782,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void parsePlaceJSON(ArrayList<String> results){
-        Log.e("JSONResponse", ""+results.get(0));
+
+        Log.e("JSONResponse", "" + results.get(0));
         Iterator<String> i = results.iterator();
         placeResults = new ArrayList<Place>();
         while(i.hasNext()){
@@ -787,6 +810,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             .snippet(newPlace.getVicinity())
                             .position(newPlace.getLocation()));
                         newPlace.setMarker(mark);
+                        mMarkers.add(mark);
                         placeResults.add(newPlace);
                     }
                 }
@@ -842,7 +866,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     detailsTask.setMyTaskCompleteListener(new RetrievePlaceDetailsTask.OnTaskComplete() {
                         @Override
                         public void setMyTaskComplete(String message) {
-                            parseDetails(message,current);
+                            parseDetails(message, current);
                         }
                     });
                     RetrievePlacePhotoTask photoTask = new RetrievePlacePhotoTask(MainActivity.this, getString(R.string.google_places_key));
@@ -850,10 +874,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     photoTask.setMyTaskCompleteListener(new RetrievePlacePhotoTask.OnTaskComplete() {
                         @Override
                         public void setMyTaskComplete(Bitmap photo) {
-                            Log.e("PHOTOBITMAP", ""+photo.getByteCount());
+                            Log.e("PHOTOBITMAP", "" + photo.getByteCount());
                             ImageView iv = (ImageView) findViewById(R.id.place_photo);
-                            iv.setImageBitmap(photo);
-
+                            if (!photo.equals(null)) {
+                                iv.setImageBitmap(photo);
+                            }
                         }
                     });
 
@@ -899,22 +924,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             JSONArray weekdayArray = hoursObject.getJSONArray("weekday_text");
             rating = resultJson.getString("rating");
             currentHours.append(weekdayArray.get(day-2));
-            /*switch (day){
-                case 1: currentHours.append(weekdayObject.getString("Sunday"));
-                break;
-                case 2: currentHours.append(weekdayObject.getString("Monday"));
-                break;
-                case 3: currentHours.append(weekdayObject.getString("Tuesday"));
-                break;
-                case 4: currentHours.append(weekdayObject.getString("Wednesday"));
-                break;
-                case 5: currentHours.append(weekdayObject.getString("Thursday"));
-                break;
-                case 6: currentHours.append(weekdayObject.getString("Friday"));
-                break;
-                case 7: currentHours.append(weekdayObject.getString("Saturday"));
-                break;
-            }*/
+
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -942,18 +952,35 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         tv6.setTextColor(Color.BLACK);
         tv6.setGravity(Gravity.LEFT);
         tv6.setPadding(15, 0, 25, 0);
-        if(!rating.equals(null)){
+        if(rating!=null){
             tv7.setText("Rating: "+ rating +"/5");
         }else{tv7.setText("No rating available");}
         tv7.setTextSize(12);
         tv7.setTextColor(Color.BLACK);
         tv7.setGravity(Gravity.LEFT);
         tv7.setPadding(15, 0, 25, 0);
+
+        if(!tv3.toString().equals(null)||!tv3.toString().equals("")) {
+            deets.addView(tv3);
+        }
+        if(!tv4.toString().equals(null)||!tv4.toString().equals("")) {
+            deets.addView(tv4);
+        }
+        if(!tv5.toString().equals(null)||!tv5.toString().equals("")) {
+            deets.addView(tv5);
+        }
+        if(!tv6.toString().equals(null)||!tv6.toString().equals("")) {
+            deets.addView(tv6);
+        }
+        if(!tv7.toString().equals(null)||!tv7.toString().equals("")) {
+            deets.addView(tv7);
+        }
+        /*
         deets.addView(tv3);
         deets.addView(tv4);
         deets.addView(tv5);
         deets.addView(tv6);
-        deets.addView(tv7);
+        deets.addView(tv7);*/
     }
 
     private void showScrollUI(boolean showScroll){
@@ -1378,12 +1405,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng userLoc = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.setMyLocationEnabled(true);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLoc, 13));
+
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
                 Log.v("Tap Coordinates", latLng.latitude + " " + latLng.longitude);
                 if(placeGem){
                     Marker userMark = mMap.addMarker(new MarkerOptions()
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.gem))
                             .position(latLng)
                             .title("User Placed Gem"));
                     Gem placedGem = new Gem(userMark.getPosition(), user);
