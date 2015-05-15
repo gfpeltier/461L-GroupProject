@@ -15,9 +15,3 @@ Our app is called Fun Between Us or ufuns.
 ----------------------------------------------
 
 
-## Group Members
-* Grant Peltier (972) 809 - 0275
-* Ishaq Zakvi (210) 269-3171
-* Vannara Houth (703) 344 - 8781
-* Cassie Rocha (915) 204 - 4103
-
